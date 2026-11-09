@@ -1,0 +1,12 @@
+# End-point (partial-crossing) detector and its injection test V1 (DECISIONS 2026-11-04). Detector = frozen v2.2 + 'ends'.
+detector_config: configs/dev_swath_v2_2.yaml
+raw_root: /Users/manansarupria/ItalGas/Savona
+ends: {phi_deg: [-30, 30, 5], min_side_m: 0.3}
+chunk_m: 600.0
+pad_m: 30.0
+along_travel_bias_m: 1.19  # m, ASSUMED (E25)
+regions:                   # V1 injection windows (m along the drive's own track)
+  ricci: [savona 14.10.2025 matt_2025.10.14_11.31.18, Survey_2025-10-14_11-37-03, Swath001, 0.0, 1216.0]
+  nizza: [savona 13.10.2025 matt_2025.10.13_09.51.03, Survey_2025-10-13_10-01-51, Swath041, 2700.0, 3640.0]
+spacing_m: 25.0            # one fake pipe every this many metres, >= 3 m from any real crossing or end
+amps: [5.0, 3.0]           # run 1, run 2

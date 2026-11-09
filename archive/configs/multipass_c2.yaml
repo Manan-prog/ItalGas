@@ -1,0 +1,12 @@
+# Cluster C2: 14 Oct session 10-35-01, two same-direction passes + one opposite (second patch test)
+tag: c2_
+detector_config: configs/dev_swath_v2_2.yaml
+raw_root: /Users/manansarupria/ItalGas/Savona
+session: savona 14.10.2025 matt_2025.10.14_10.25.22
+survey: Survey_2025-10-14_10-35-01
+reference: Swath001
+passes: [Swath001, Swath005, Swath004]
+window_s_m: [200.0, 1500.0]
+u_max_m: 8.0
+tie: {max_ds_m: 3.0, max_dphi_deg: 10.0, max_dz_m: 0.15, q_max: 0.05}
+mosaic: {du_m: 0.08, u_range_m: [-3.0, 4.0], depth_slices_m: [[0.3, 0.5], [0.5, 0.7], [0.7, 0.9], [0.9, 1.1], [1.1, 1.4]]}

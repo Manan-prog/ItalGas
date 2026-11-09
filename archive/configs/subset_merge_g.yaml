@@ -1,0 +1,12 @@
+# Subset (three sample regions) merge and web page, 4 Nov 2026: crossings from citywide_scan.yaml, along-street tracks
+# from the adopted option-C pass (citywide_along.yaml). Drives: Corso Ricci 73, 28, 30, 49; Via Fontanassa 106, 108;
+# Via Nizza 36, 37, 39, 40, 45, 46 (swath index = sorted glob of raw_root/*/Survey_*/Swath*.path).
+detector_config: configs/dev_swath_v2_2.yaml
+raw_root: /Users/manansarupria/ItalGas/Savona
+drives: [73, 28, 30, 49, 106, 108, 36, 37, 39, 40, 45, 46]
+along_tag: _g
+merge_tag: _subset_g
+along_travel_bias_m: 1.19  # m, ASSUMED (E25)
+sigma_floor_m: 0.3
+pp_fail_m: 5.0
+label: Three sample regions

@@ -1,0 +1,11 @@
+# Via Fontanassa single drive (15 Oct 09:11 Swath016, 1.07 km) for the web page (3 Nov 2026): crossings on both rows,
+# whole drive, its own frame (reference = itself). Same detector as every other street.
+detector_config: configs/dev_swath_v2_2.yaml
+raw_root: /Users/manansarupria/ItalGas/Savona
+session: savona 1410 matt_2025.10.15_09.07.28
+survey: Survey_2025-10-15_09-11-09
+reference: Swath016
+passes: [Swath016]
+tag: fz_
+window_s_m: [0.0, 1066.0]
+u_max_m: 8.0

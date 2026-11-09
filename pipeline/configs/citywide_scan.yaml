@@ -1,0 +1,12 @@
+# Whole-survey scan (3 Nov 2026): crossing pipes (both radar rows, column-shift null) and along-street
+# tracks (200 MHz, channel-permutation null) on every drive; only detections are saved (cache/city/scan_*).
+branches: [crossings]      # the along-street branch runs separately (configs/citywide_along.yaml) after the background test
+detector_config: configs/dev_swath_v2_2.yaml
+raw_root: ${ITALGAS_DATA}/Savona
+chunk_m: 600.0             # m, drive processed in pieces of this length (memory), statistics per piece
+pad_m: 30.0                # m, extra data either side of a piece (migration aperture, track ends)
+min_scans: 2000            # drives with fewer 200 MHz scans (~90 m) are skipped
+keep_q: 0.2                # per-array crossings and tracks saved up to this q (chance tests need the tail)
+along_travel_bias_m: 1.19  # m, ASSUMED forward shift of every detection (E25; cause unresolved, DECISIONS.md)
+pp_fail_m: 5.0             # m, |RT - PP| above this = post-processed solution failed, position error unknown
+sigma_floor_m: 0.3         # m, smallest position error used (registration residual, E17)

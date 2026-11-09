@@ -1,0 +1,18 @@
+# L2 held-out along-road record test (DECISIONS.md 2026-11-03). Detector = configs/dev_swath_v2_2.yaml.
+detector_config: configs/dev_swath_v2_2.yaml
+raw_root: /Users/manansarupria/ItalGas/Savona
+records: [data_public/gfi_all_condotte_acque_bianche.json, data_public/gfi_all_condotte_acque_nere.json]
+n_chance: 1000
+swaths:   # [session folder, survey folder, swath]; chosen by recorded along-footprint pipe length per km, top 3 per day + 13 Oct Swath026
+  - [savona 13.10.2025 matt_2025.10.13_09.51.03, Survey_2025-10-13_10-01-51, Swath022]
+  - [savona 13.10.2025 matt_2025.10.13_09.51.03, Survey_2025-10-13_14-58-15, Swath002]
+  - [savona 13.10.2025 matt_2025.10.13_09.51.03, Survey_2025-10-13_10-01-51, Swath026]
+  - [savona 14.10.2025 matt_2025.10.14_11.44.09, Survey_2025-10-14_11-49-09, Swath003]
+  - [savona 14.10.2025 matt_2025.10.14_14.23.18, Survey_2025-10-14_14-42-09, Swath002]
+  - [savona 14.10.2025 matt_2025.10.14_11.44.09, Survey_2025-10-14_11-49-09, Swath005]
+  - [savona 1410 matt_2025.10.15_09.07.28, Survey_2025-10-15_09-11-09, Swath010]
+  - [savona 1410 matt_2025.10.15_09.07.28, Survey_2025-10-15_09-11-09, Swath016]
+  - [savona 1410 matt_2025.10.15_09.07.28, Survey_2025-10-15_09-11-09, Swath005]
+  - [savona 1410 matt_2025.10.17_09.03.29, Survey_2025-10-17_10-44-26, Swath006]
+  - [savona 1410 matt_2025.10.17_09.03.29, Survey_2025-10-17_09-09-24, Swath002]
+  - [savona 1410 matt_2025.10.17_09.03.29, Survey_2025-10-17_10-44-26, Swath018]

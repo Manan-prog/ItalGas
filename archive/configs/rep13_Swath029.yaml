@@ -1,0 +1,23 @@
+# Repeat pass over the development street, 13 Oct 2025 session 10:01, Swath029
+survey_dir: "/Users/manansarupria/ItalGas/Savona/savona 13.10.2025 matt_2025.10.13_09.51.03/Survey_2025-10-13_10-01-51"
+swath: Swath029
+cache_dir: "/Users/manansarupria/ItalGas/cache"
+seed: 0
+track:
+  source: path            # real-time RTK .path (EPSG:3857); 'pp' = post-processed _Ext.nmea
+  smooth_win: 11          # 10 Hz samples, moving average
+processing:
+  dewow_win_ns: {1: 8.0, 2: 15.0}
+  t0_frac: 0.2
+  align_traces: true   # per-trace shift vs mean trace, +-6 samples, early window
+  background: global      # mean trace over the swath per channel
+  bandpass_mhz: {1: [250, 1200], 2: [100, 600]}
+  gain_power: 1.0
+  velocity_m_ns: 0.10     # DERIVED: hyperbola-summation analysis on this swath (median of strong hyperbolas 0.105, weighted mean 0.099); +-0.02
+  migration: kirchhoff
+  aperture_m: 1.2
+  t_downsample: 4         # envelope stored every 4th sample
+cube:
+  ds_m: 0.05
+  du_m: 0.08
+  u_range_m: [-0.9, 0.9]

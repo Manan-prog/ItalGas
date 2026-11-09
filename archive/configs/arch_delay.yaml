@@ -1,0 +1,20 @@
+# E28 (3 Nov 2026): across-array arch by DELAY measurement (cross-correlation timing per channel)
+# instead of envelope-edge picking. Data: Via Nizza registered drives (multipass_aurelia.yaml).
+multipass_config: configs/multipass_aurelia.yaml
+seed: 0
+velocity_m_ns: 0.10                 # DERIVED (E03); used only to convert ns to m
+gate_half_ns: 6.0                   # +-0.3 m at v = 0.10 m/ns around the target depth
+max_lag_ns: 5.0                     # variant (a) only, kept for the record
+chain_gate_half_ns: 3.0             # final estimator: gate around the neighbour pick
+chain_max_lag_ns: 1.5               # final estimator: step delay limit (a 0.68 m pipe needs 1.6 ns/step at u = 0.9 m)
+upsample: 8                         # FFT resampling factor before correlation (sub-sample timing)
+min_corr: 0.5                       # channels with a lower peak correlation are not used in the fit
+sub_win_m: 4.0                      # sub-windows for pick scatter and apex bootstrap
+pipe_rule: {rms_ratio: 1.5, apex_margin_m: 0.15}   # same rule as pipe_shape_test (E17/E24)
+targets:                            # s in the reference-drive frame (true s), u in the reference lateral frame
+  - {name: place1, drives: [Swath046, Swath040, Swath037], s0: 2876.0, s1: 2914.0, u0: 4.45, z_hint: 0.68, expect: pipe-candidate}
+  - {name: place2, drives: [Swath041, Swath047], s0: 2915.0, s1: 2950.0, u0: 0.05, z_hint: 0.63, expect: layer-like}
+positive_control:                   # confirmed crossing pipes (q = 0, class A) on Swath046: same estimator applied ALONG s
+  - {drive: Swath046, s0_drive: 3076.3, z_hint: 0.67, phi_deg: 5.0}
+  - {drive: Swath046, s0_drive: 3199.35, z_hint: 0.63, phi_deg: 0.0}
+controls: {n_per_drive: 60, win_m: 20.0, z_range_m: [0.4, 1.0]}   # random windows, target = brightest reflector in z_range

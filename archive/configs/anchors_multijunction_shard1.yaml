@@ -1,0 +1,6 @@
+# Anchored along-road test on all along-street drives that pass >= 2 junction places (DECISIONS.md 2026-11-03).
+detector_config: configs/dev_swath_v2_2.yaml
+raw_root: /Users/manansarupria/ItalGas/Savona
+swath_tracks: /private/tmp/claude-501/-Users-manansarupria-Library-CloudStorage-GoogleDrive-manansarupria599-gmail-com-My-Drive-Smartauger-ItalGas/4dd8e26b-56a0-4360-81df-80e7b8167035/scratchpad/swaths.npz
+shard: 1
+n_shards: 4

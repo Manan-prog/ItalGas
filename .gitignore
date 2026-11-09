@@ -1,0 +1,27 @@
+# ---- never commit: credentials, raw data, vendor documents
+italgas-manan-cli-credentials.csv
+*credentials*
+Savona/
+*.zip
+Italgas_System_Documents/
+*INTERNAL*
+
+# ---- large derived products live in $ITALGAS_DATA/cache, never in the repo
+*.npz
+*.log
+figures/web/evidence
+archive/web/savona_pipes_map_3streets.html
+
+# ---- python / editor / OS
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+.ipynb_checkpoints/
+.DS_Store
+.vscode/
+.idea/
+
+# archive figures: scripts only, the PNGs are experiment output
+archive/figures/*.png

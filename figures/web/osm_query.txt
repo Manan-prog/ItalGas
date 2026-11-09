@@ -1,0 +1,10 @@
+[out:json][timeout:300];
+(
+  way["highway"](44.262,8.360,44.368,8.508);
+  way["building"](44.262,8.360,44.368,8.508);
+  way["natural"="coastline"](44.262,8.360,44.368,8.508);
+  way["natural"="water"](44.262,8.360,44.368,8.508);
+  way["waterway"~"^(river|stream|canal)$"](44.262,8.360,44.368,8.508);
+  way["railway"~"^(rail|tram)$"](44.262,8.360,44.368,8.508);
+);
+out geom;

@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Savona Pipe Map</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+:root{--surface:rgba(252,252,251,.94);--surface2:#fcfcfb;--ink:#1c1e21;--muted:#6b7077;--faint:#9aa0a6;--line:#e6e6e2;--chip:#f2f2ef;--accent:#2a78d6;
+  --pipe:#1baf7a;--cross:#2a78d6;--high:#1baf7a;--mid:#8a93a0;--low:#eb6834;--shadow:0 6px 24px rgba(0,0,0,.14);--r:14px}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--surface:rgba(27,28,31,.94);--surface2:#1b1c1f;--ink:#ececea;--muted:#a3a6aa;--faint:#7c8187;--line:#303236;--chip:#26282c;--accent:#5b9be6;--shadow:0 6px 24px rgba(0,0,0,.5)}}
+:root[data-theme="dark"]{--surface:rgba(27,28,31,.94);--surface2:#1b1c1f;--ink:#ececea;--muted:#a3a6aa;--faint:#7c8187;--line:#303236;--chip:#26282c;--accent:#5b9be6;--shadow:0 6px 24px rgba(0,0,0,.5)}
+:root[data-theme="dark"]{--surface:rgba(27,28,31,.94);--surface2:#1b1c1f;--ink:#ececea;--muted:#a3a6aa;--faint:#7c8187;--line:#303236;--chip:#26282c;--accent:#5b9be6;--shadow:0 6px 24px rgba(0,0,0,.5)}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--surface2);color:var(--ink);font:13px/1.5 Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+#map{position:absolute;inset:0;background:#0d0f12}
+#panel{position:absolute;top:16px;left:16px;z-index:1000;width:min(360px,calc(100vw - 32px));max-height:calc(100% - 32px);overflow:auto;background:var(--surface);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-radius:var(--r);box-shadow:var(--shadow);padding:18px 18px 14px;scrollbar-width:thin}
+#panel h1{font-size:16px;margin:0;font-weight:600;letter-spacing:-.01em}
+.sub{color:var(--muted);font-size:12px;margin:4px 0 0}
+.sec{border-top:1px solid var(--line);padding-top:12px;margin-top:12px}
+.sec h2{font-size:10.5px;text-transform:uppercase;letter-spacing:.09em;color:var(--faint);margin:0 0 8px;font-weight:600}
+.streets{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.streets button{border:1px solid var(--line);background:var(--chip);color:var(--ink);border-radius:9px;padding:7px 9px;font:inherit;font-size:12.5px;font-weight:500;cursor:pointer;text-align:left;transition:border-color .15s}
+.streets button:hover{border-color:var(--accent)}
+.streets small{display:block;color:var(--muted);font-size:11px;font-weight:400;margin-top:1px}
+label.lyr{display:flex;align-items:center;gap:9px;padding:4px 0;cursor:pointer;font-size:12.5px}
+label.lyr input{margin:0;accent-color:var(--accent);width:14px;height:14px}
+.sw{flex:0 0 28px;height:12px;display:inline-block}
+.cnt{margin-left:auto;color:var(--faint);font-size:11.5px;font-variant-numeric:tabular-nums;padding-left:8px}
+.legend{display:flex;gap:12px;margin:2px 0 4px 51px;font-size:11px;color:var(--muted)}
+.legend span{display:flex;align-items:center;gap:5px}
+.legend i{display:inline-block;width:18px;border-radius:2px;background:var(--pipe)}
+.ramp{height:8px;border-radius:4px;margin:4px 0 3px;background:linear-gradient(90deg,#c0392b,#efe9dc 50%,#1a9850)}
+.rampx{display:flex;justify-content:space-between;color:var(--muted);font-size:11px}
+.row{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted);margin:6px 0 0}
+.row input[type=range]{flex:1;accent-color:var(--accent)}
+.row select{font:inherit;font-size:12px;background:var(--chip);color:var(--ink);border:1px solid var(--line);border-radius:7px;padding:3px 6px;flex:1}
+.stat{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;font-size:12.5px;margin:0 0 6px}
+.stat b{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.stat span{color:var(--muted)}
+#detail{position:absolute;top:12px;right:12px;width:330px;max-height:calc(100% - 24px);overflow:auto;background:var(--surface);color:var(--ink);border-radius:12px;box-shadow:var(--shadow);padding:12px 14px;z-index:1000;font-size:12.5px;backdrop-filter:blur(8px)}
+#detail.hide{display:none}
+#dclose{position:absolute;top:6px;right:8px;border:0;background:none;color:var(--muted);font-size:18px;cursor:pointer;line-height:1}
+#detail .pp h3{margin:0 0 6px;font-size:14px;padding-right:20px}
+.radar{margin:0 0 8px}.radar img{width:100%;display:block;border-radius:6px;background:#fff}.radar figcaption{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.35}
+@media (max-width:640px){#detail{left:12px;right:12px;width:auto;top:auto;bottom:12px;max-height:45%}}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:2px 0 4px}
+.tile{background:var(--chip);border:1px solid var(--line);border-radius:9px;padding:7px 9px}
+.tile b{display:block;font-size:16px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.2}
+.tile span{font-size:11px;color:var(--muted);line-height:1.3}
+.row button,.sec>button{font:inherit;font-size:12px;background:var(--chip);color:var(--ink);border:1px solid var(--line);border-radius:7px;padding:4px 9px;cursor:pointer}
+.row button:hover,.sec>button:hover{border-color:var(--accent)}
+.cap{font-size:12px;margin-top:6px;line-height:1.4}
+.cap .pp h3{margin:0 0 4px;font-size:12.5px}
+details{font-size:12.5px;color:var(--ink)}
+details summary{cursor:pointer;color:var(--accent);font-weight:500;list-style:none;font-size:12px}
+details summary::-webkit-details-marker{display:none}
+details summary::before{content:"+";display:inline-block;width:12px;color:var(--faint)}
+details[open] summary::before{content:"–"}
+details p,details .chk{margin:6px 0;color:var(--ink)}
+.chk .m{color:var(--muted)}
+.warn{font-size:11.5px;color:var(--muted);margin:10px 0 0}
+#toggle{display:none;position:absolute;top:12px;left:12px;z-index:1001;border:0;border-radius:9px;background:var(--surface);color:var(--ink);box-shadow:var(--shadow);padding:8px 12px;font:inherit;cursor:pointer}
+#coords{position:absolute;right:10px;bottom:22px;z-index:1000;background:rgba(20,22,25,.72);color:#f2f2f2;font:11px ui-monospace,Menlo,monospace;padding:3px 7px;border-radius:5px;pointer-events:none}
+.leaflet-popup-content-wrapper{border-radius:12px;box-shadow:var(--shadow)}
+.leaflet-popup-content{font:12.5px/1.5 Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;margin:12px 14px;min-width:250px;color:#1c1e21}
+.pp h3{margin:0 0 6px;font-size:13.5px;font-weight:600;display:flex;align-items:center;gap:8px}
+.pp table{border-collapse:collapse;width:100%;font-size:12.5px}
+.pp td{padding:2.5px 0;vertical-align:top;border-top:1px solid #efefec}
+.pp tr:first-child td{border-top:0}
+.pp td:first-child{color:#6b7077;padding-right:12px;white-space:nowrap}
+.pp .nt{color:#6b7077;font-size:11.5px;margin-top:8px}
+.tag{display:inline-block;font-size:10.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:1px 7px;border-radius:999px;color:#fff;line-height:1.6}
+.tag.high{background:var(--high)}.tag.mid{background:var(--mid)}.tag.low{background:var(--low)}
+.leaflet-tooltip.tt{font:12px/1.45 Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:rgba(24,25,28,.94);color:#f4f4f2;border:0;border-radius:10px;padding:9px 11px;box-shadow:var(--shadow);width:220px;white-space:normal}
+.leaflet-tooltip.tt .h{display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:600;margin-bottom:4px}
+.leaflet-tooltip.tt .l{color:#c9ccd1}
+.leaflet-tooltip.tt .l b{color:#f4f4f2;font-weight:500}
+.leaflet-tooltip-top.tt::before{border-top-color:rgba(24,25,28,.94)}
+.leaflet-image-layer{image-rendering:pixelated}
+@media (max-width:640px){#panel{top:56px;max-height:calc(100% - 68px)}#panel.hide{display:none}#toggle{display:block}}
+</style>
+</head>
+<body>
+<div id="map"></div>
+<button id="toggle" aria-controls="panel">Layers</button>
+<div id="panel">
+  <h1>Savona pipe map</h1>
+  <p class="sub" id="sub"></p>
+  <div class="sec"><h2>Go to</h2><div class="streets" id="streets"></div></div>
+  <div class="sec"><h2>Layers</h2><div id="layers"></div>
+    <div class="row"><span>Along-street lines</span><select id="lf"><option value="all">all</option><option value="covered">where a second lane passed</option><option value="repeated">repeated by a second lane</option></select></div>
+    <div class="row"><span>Min evidence P</span><input type="range" id="lp" min="0.5" max="1" step="0.05" value="0.5" aria-label="minimum evidence"><span id="lpv">0.50</span></div>
+  </div>
+  <div class="sec"><h2>Evidence raster</h2>
+    <div class="ramp"></div><div class="rampx"><span>0 · like pipe-free data</span><span>1 · beyond pipe-free data</span></div>
+    <div class="row"><span>Opacity</span><input type="range" id="rop" min="0" max="1" step="0.05" value="0.85"><span id="rres"></span></div>
+  </div>
+  <div class="sec"><h2>Basemap</h2>
+    <div class="row" style="margin:0"><select id="bm"><option value="sat">Satellite (Esri)</option><option value="osm">Streets (OpenStreetMap)</option><option value="none">None</option></select>
+    <input type="range" id="bop" min="0.2" max="1" step="0.05" value="0.8" aria-label="Basemap opacity" style="flex:0 0 90px"></div>
+  </div>
+  <div class="sec"><h2>At a glance</h2><div class="tiles" id="glance"></div></div>
+  <div class="sec"><h2>Export</h2><button id="dl">Download lines and crossings (GeoJSON, WGS84)</button></div>
+  <div class="sec"><h2>Checks</h2><div class="stat" id="stats"></div>
+    <details><summary>Details of the checks and thresholds</summary><div id="checks"></div></details>
+  </div>
+  <div class="sec"><details><summary>How to read this map</summary>
+    <p><b>Ribbons</b> show where the radar passed (about 1.4 m wide under the van). Grey: the street was driven once. Blue-grey: another drive passed in a neighbouring lane (0.5 to 1.2 m away) for at least 50 m. Click a ribbon for the drive's details.</p>
+    <p><b>Raster</b> (red to green): for every 0.5 m along the drive and every 4 cm across it, P is the share of cells with that much evidence of a compact reflector that the same data with the antenna order shuffled does not produce. The strongest depth is shown; where drives overlap, the highest value. The top 0.33 m and the outer 0.2 m on each side of the array are not evaluated.</p>
+    <p><b>Green lines</b> are drawn from the raster by one rule (see Checks). All lines are drawn alike; hover to see whether a drive in another lane repeats it, covers it without repeating it, or does not cover it, and click for details. The few lines that a second lane repeats carry a white core.</p>
+    <p><b>Blue lines</b> are pipes crossing the street, from a separate detector run on a subset of drives. Thick: seen by both radar rows. Thin: one row with P 0.9 or more.</p>
+    <p>Positions come from the real-time GPS track, moved 1.19 m forward along the direction of travel (an assumed timing bias). They can be out by 0.3 to 1 m or more; popups give the measured uncertainty where it exists.</p>
+  </details>
+  <p class="warn">Radar only, provisional. No Italgas network map has been received, so nothing here has been checked against the real gas network. Municipal sewer and storm records (Comune di Savona, CC BY 4.0) are shown for comparison only.</p></div>
+  <div class="sec"><h2>Tour of the strongest evidence</h2>
+    <div class="row" style="margin:0"><button id="tprev" aria-label="previous stop">&#9664;</button><button id="tnext">Next stop &#9654;</button><span id="tpos"></span></div>
+    <div class="cap" id="tcap">Press Next to visit the along-street lines a second lane repeats, then the strongest crossings.</div>
+  </div>
+</div>
+<div id="coords"></div>
+<div id="detail" class="hide"><button id="dclose" aria-label="close">&times;</button><div id="dbody"></div></div>
+<script>
+const DATA = /*__DATA__*/null;
+const C = {blue:"#2a78d6", aqua:"#1baf7a", single:"#3b4652", repeat:"#3f5f86", stripEdge:"#e6ebf0", track:"#e6ebf0", rec:"#d0d0d0"};
+const map = L.map("map", {zoomControl:true, maxZoom:22, preferCanvas:true});
+L.control.scale({metric:true, imperial:false, position:"bottomleft", maxWidth:160}).addTo(map);
+[["tracks",340],["strips",350],["raster",360],["records",380],["cross",400],["along",410],["pins",420]].forEach(([n,z])=>{map.createPane(n).style.zIndex=z;});
+// ONE canvas for every vector layer: a canvas receives the mouse for everything under it, so stacked canvases leave only the
+// top one hoverable (6 Nov 2026: crossings and footprints had no hover or click under the along-street canvas). Draw order = add order.
+const ONE = L.canvas({pane:"along"}); const R = {}; ["tracks","strips","records","cross","along","pins"].forEach(n=> R[n] = ONE);
+const base = {
+  sat: L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {maxNativeZoom:19, maxZoom:22, attribution:"Imagery &copy; Esri, Maxar, Earthstar Geographics"}),
+  osm: L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {maxNativeZoom:19, maxZoom:22, attribution:"&copy; OpenStreetMap contributors"})
+};
+let cur = base.sat.addTo(map); cur.setOpacity(0.8);
+const fmt = (v,d=2)=> (v===null||v===undefined||Number.isNaN(v)) ? "n/a" : Number(v).toFixed(d);
+const num = v => (v===null||v===undefined) ? "n/a" : Number(v).toLocaleString("en-GB");
+const pct = v => v===null||v===undefined ? "n/a" : Math.round(100*v)+"%";
+const sig = s => s ? `${fmt(s[0])} m along, ${fmt(s[1])} m across (1&sigma;, lower bound)` : "not measured here (post-processed track missing or failed)";
+const RTK = {4:"RTK fixed", 5:"RTK float", 1:"GPS only", 2:"differential", 6:"dead reckoning"};
+const K = DATA.checks; const RU = K.lines.rule; const LN = K.lines;
+const CONF = {repeated:["high","Repeated by a second lane","a drive in another lane repeats it"], uncovered:["mid","One drive only","no drive in another lane covers this stretch"], "not-repeated":["low","Not repeated","a drive in another lane covers this stretch but does not repeat it"]};
+const tag = p => `<span class="tag ${CONF[p.rep][0]}">${CONF[p.rep][0]==="mid"?"medium":CONF[p.rep][0]}</span>`;
+const depthTxt = p => p.n_runs>1 ? `${fmt(p.runs[0].depth_m)}&ndash;${fmt(p.runs[p.runs.length-1].depth_m)} m` : `${fmt(p.depth_m)} m`;
+function confText(p){
+  return `<div class="h"><span>Along-street pipe</span>${tag(p)}</div>
+<div class="l">Depth <b>${depthTxt(p)}</b>${p.n_runs>1?` · ${p.n_runs} reflections`:""}</div>
+<div class="l">Length <b>${fmt(p.length_m,0)} m</b> · evidence <b>${fmt(p.P)}</b></div>
+<div class="l">${CONF[p.rep][1]}</div>`;
+}
+const radar = (src, cap) => src ? `<figure class="radar"><img src="${src}" alt="radar evidence" loading="lazy" onerror="this.parentNode.style.display='none'"><figcaption>${cap}</figcaption></figure>` : "";
+function popupAlong(p){
+  const rows = [["Drive",p.drive],["Confidence",`${tag(p)} &nbsp;${CONF[p.rep][2]}`],["Length",fmt(p.length_m,1)+" m"],
+    ["Depth to top",fmt(p.depth_m)+" m (cells "+fmt(p.depth_range[0])+"&ndash;"+fmt(p.depth_range[1])+" m, at 0.10 m/ns)"],
+    ["Reflections here",p.n_runs===1?"one":`${p.n_runs}, stacked from ${depthTxt(p)}; drawn once, at the shallowest`],
+    ["Evidence P",fmt(p.P)+" mean, "+fmt(p.P_min)+" lowest cell"],["Offset from drive centre",fmt(p.u)+" m"],["Second lane",p.rep_txt],
+    ["Position uncertainty",sig(p.sigma)],["GPS here",(RTK[p.rtk]||"unknown")+(p.pp_sd!==null&&p.pp_sd!==undefined?`; post-processed SD ${fmt(p.pp_sd)} m`:"")]];
+  return `<div class="pp"><h3>Along-street pipe</h3>${radar(p.img, "Radar evidence. A: section across the street at the line's midpoint (19 channels of the 200 MHz row stacked over 2 m and focused), the cross marks this line. B: the channel nearest the line, along the street; dashed = its depth, bar = its extent.")}<table>${rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join("")}</table><div class="nt">Derived from the raster by the rule in Checks. A one-drive line can be a reflection fixed to the vehicle; only a repeat from another lane rules that out. Radar only, provisional.</div></div>`;
+}
+function popupCross(p){
+  const rows = [["Drive",p.drive],["Seen by",p.support],["P",fmt(p.P)],["Depth to top",fmt(p.depth_m)+" m (at 0.10 m/ns)"],["Angle from square across",fmt(p.angle_deg,0)+"&deg;"],["Position uncertainty",sig(p.sigma)],
+    ["GPS here",(RTK[p.rtk]||"unknown")+(p.pp_sd!==null&&p.pp_sd!==undefined?`; post-processed SD ${fmt(p.pp_sd)} m`:"")]];
+  return `<div class="pp"><h3>Crossing pipe &middot; ${p.kind}</h3>${radar(p.img, "Radar evidence: the centre channel of each row, 8 m along the street, 1.6 m deep. A pipe crossing the street makes an arch; the triangle and dashed line mark the detection.")}<table>${rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join("")}</table><div class="nt">Radar only, provisional.</div></div>`;
+}
+function cased(fc, filter, style, pane, popup, tip){
+  const g = L.layerGroup(); const feats = fc.filter(filter); const w = f => typeof style.weight==="function" ? style.weight(f) : style.weight;
+  L.geoJSON({type:"FeatureCollection",features:feats},{renderer:R[pane], interactive:false, style:f=>({color:"#ffffff",weight:w(f)+2.6,opacity:style.casing??0.85,lineCap:"round"})}).addTo(g);
+  L.geoJSON({type:"FeatureCollection",features:feats},{renderer:R[pane], style:f=>Object.assign({lineCap:"round"},style,{weight:w(f)}),
+    onEachFeature:(f,l)=>{ l.on("click", ()=> showDetail(popup(f.properties))); if(tip) l.bindTooltip(()=>tip(f.properties),{sticky:true,direction:"top",className:"tt",opacity:1}); }}).addTo(g);
+  return [g, feats.length];
+}
+const L_ = {};
+function showDetail(html){ document.getElementById("dbody").innerHTML = html; document.getElementById("detail").classList.remove("hide"); }
+document.getElementById("dclose").onclick = ()=> document.getElementById("detail").classList.add("hide");
+L_.tracks = [L.geoJSON({type:"FeatureCollection",features:DATA.tracks},{renderer:R.tracks,interactive:false,style:{color:C.track,weight:1.2,opacity:0.5}}), DATA.tracks.length];
+function stripLayer(cls){
+  const feats = DATA.strips.filter(f=>f.properties.cls===cls);
+  return [L.geoJSON({type:"FeatureCollection",features:feats},{renderer:R.strips,interactive:false,style:{color:C.stripEdge,weight:0.6,opacity:0.6,fillColor:C[cls],fillOpacity:0.55}}), new Set(feats.map(f=>f.properties.label)).size];
+}
+L_.single = stripLayer("single"); L_.repeat = stripLayer("repeat");
+function lazyRaster(tiles, opacity){
+  const LV = Object.keys(tiles).map(Number).sort((a,b)=>b-a); if(!LV.length) return [L.layerGroup(), 0];
+  const TB = {}; LV.forEach(z=> TB[z] = tiles[z].map(t=>L.latLngBounds(t.bounds)));
+  const grp = L.layerGroup(); const active = new Map();
+  const level = ()=>{ const z = map.getZoom(); return LV.find(m=> z >= m); };
+  const refresh = ()=>{
+    if(!map.hasLayer(grp)) return;
+    const lv = level(), vb = map.getBounds().pad(0.25), want = new Set();
+    TB[lv].forEach((b,i)=>{ if(vb.intersects(b)) want.add(lv+":"+i); });
+    for(const [k,l] of active){ if(!want.has(k)){ grp.removeLayer(l); active.delete(k);} }
+    want.forEach(k=>{ if(!active.has(k)){ const [z,i] = k.split(":").map(Number); const t = tiles[z][i];
+      const l = L.imageOverlay(t.png, t.bounds, {pane:"raster", opacity:opacity, interactive:false}); grp.addLayer(l); active.set(k,l);} });
+    const el = document.getElementById("rres"); if(el) el.textContent = `cell ${lv>=17?"0.15":lv>=15?"1.2":"4.8"} m`;
+  };
+  map.on("moveend", refresh); grp.on("add", ()=> setTimeout(refresh, 0)); grp.refresh = refresh;
+  return [grp, tiles[LV[0]].length];
+}
+L_.praster = lazyRaster(DATA.ptiles || {}, 0.85);
+L_.along = cased(DATA.along, ()=>true, {color:C.aqua, weight:3.0, opacity:1}, "along", popupAlong, confText);
+L_.along[0].on("add", ()=>{ if(L_.alongCore || !map.hasLayer(L_.along[0])) return; L_.alongCore = L.geoJSON({type:"FeatureCollection",features:DATA.along.filter(f=>f.properties.rep==="repeated" && (window.lineShow ? window.lineShow(f.properties) : true))},{renderer:R.along,style:{color:"#ffffff",weight:1.0,opacity:0.95},interactive:false}); L_.alongCore.addTo(map); });
+L_.along[0].on("remove", ()=>{ if(L_.alongCore){ map.removeLayer(L_.alongCore); L_.alongCore=null; } });
+L_.conf = cased(DATA.cross, f=>f.properties.kind==="confident", {color:C.blue,weight:3.6,opacity:1}, "cross", popupCross, p=>`<div class="h"><span>Crossing pipe</span><span class="tag high">confident</span></div><div class="l">Depth <b>${fmt(p.depth_m)} m</b> · evidence <b>${fmt(p.P)}</b></div><div class="l">${p.support}</div>`);
+L_.prob = cased(DATA.cross, f=>f.properties.kind==="probable", {color:C.blue,weight:1.6,opacity:0.95,casing:0.55}, "cross", popupCross, p=>`<div class="h"><span>Crossing pipe</span><span class="tag mid">probable</span></div><div class="l">Depth <b>${fmt(p.depth_m)} m</b> · evidence <b>${fmt(p.P)}</b></div><div class="l">${p.support}</div>`);
+L_.pins = (()=>{ const g = L.layerGroup();
+  L.geoJSON({type:"FeatureCollection",features:DATA.pinned},{renderer:R.pins,style:{color:C.aqua,weight:2.5,opacity:0.95,dashArray:"2 6"},
+    onEachFeature:(f,l)=>l.bindPopup(`<div class="pp"><h3>Pinned along-street segment</h3><table><tr><td>Length</td><td>${f.properties.length_m} m</td></tr><tr><td>Depth</td><td>${f.properties.depth} m</td></tr><tr><td>Offset from drive</td><td>${f.properties.u} m</td></tr></table><div class="nt">Two junction pins on the same street that agree within 1 m sideways and 0.25 m in depth (5 of 22 pairs vs 1.9 by chance, p = 0.03, E30). Joined along the drive path; nothing between the pins is measured.</div></div>`)}).addTo(g);
+  L.geoJSON({type:"FeatureCollection",features:DATA.pins},{pointToLayer:(f,ll)=>L.circleMarker(ll,{renderer:R.pins,radius:f.properties.support>=2?6:3.5,color:"#ffffff",weight:1.2,fillColor:C.aqua,fillOpacity:1}),
+    onEachFeature:(f,l)=>l.bindPopup(`<div class="pp"><h3>Junction pin</h3><table><tr><td>Depth</td><td>${fmt(f.properties.depth_m)} m</td></tr><tr><td>Crossing drives</td><td>${f.properties.support}</td></tr></table><div class="nt">A pipe running along this street, seen as a crossing pipe by a drive that crosses the street (both radar rows, E30).</div></div>`)}).addTo(g);
+  return [g, DATA.pins.length]; })();
+L_.records = [L.geoJSON({type:"FeatureCollection",features:DATA.records},{renderer:R.records,style:f=>({color:C.rec,weight:f.properties.kind==="storm"?1.6:2,opacity:0.9,dashArray:f.properties.kind==="storm"?"7 5":"1 5",lineCap:"round"}),
+  onEachFeature:(f,l)=>l.bindPopup(`<div class="pp"><h3>Municipal ${f.properties.kind} pipe record</h3><table><tr><td>Diameter</td><td>${f.properties.diam||"n/a"}</td></tr><tr><td>Material</td><td>${f.properties.mat||"n/a"}</td></tr><tr><td>Depth start/end</td><td>${f.properties.depth}</td></tr><tr><td>Street</td><td>${f.properties.street||"n/a"}</td></tr></table><div class="nt">Comune di Savona SIT (CC BY 4.0). Not gas; position accuracy of the record unknown.</div></div>`)}), DATA.records.length];
+const sw = (c,w,d)=>`<svg class="sw" viewBox="0 0 28 12"><line x1="2" y1="6" x2="26" y2="6" stroke="${c}" stroke-width="${w}" ${d?`stroke-dasharray="${d}"`:""} stroke-linecap="round"/></svg>`;
+const box = c=>`<svg class="sw" viewBox="0 0 28 12"><rect x="1" y="1" width="26" height="10" rx="2" fill="${c}" fill-opacity=".75" stroke="#9aa3ad" stroke-width=".8"/></svg>`;
+const LAYERS = [
+  ["along","Pipes along the street",sw(C.aqua,3.4),true],
+  ["conf","Crossing pipes, confident",sw(C.blue,4),true],
+  ["prob","Crossing pipes, probable",sw(C.blue,1.8),true],
+  ["praster","Evidence raster",`<span class="sw ramp" style="margin:0"></span>`,true],
+  ["pins","Junction pins",`<svg class="sw" viewBox="0 0 28 12"><circle cx="14" cy="6" r="4.5" fill="${C.aqua}" stroke="#fff"/></svg>`,false],
+  ["records","Sewer and storm records",sw("#8a8a8a",1.6,"5 3"),false],
+  ["tracks","All drives",sw("#9aa3ad",1.6),false],
+  ["single","Footprint, driven once",box(C.single),true],
+  ["repeat","Footprint, second lane within 0.5–1.2 m",box(C.repeat),true]];
+const BACK = ["tracks","records","single","repeat"];                                    // drawn under the pipes whenever they are switched on
+const toBack = layer => layer.eachLayer(g=>{ (g.eachLayer ? g : {eachLayer:f=>f(g)}).eachLayer(l=> l.bringToBack && l.bringToBack()); });
+// The send-to-back must run AFTER the paths exist on the canvas: Leaflet defers every addLayer until the map has a view, and the
+// view is set after the layers below, so a bringToBack called right after addTo(map) found no path and did nothing (6 Nov 2026:
+// footprints drawn over the pipes). Hooked on the layer's own "add" event instead, one tick later.
+BACK.forEach(k=> L_[k][0].on("add", ()=> setTimeout(()=> toBack(L_[k][0]), 0)));
+const lyrBox = document.getElementById("layers");
+LAYERS.forEach(([k,name,swt,on])=>{ const [layer,n] = L_[k]; if(on) layer.addTo(map);
+  const lab = document.createElement("label"); lab.className="lyr"; lab.dataset.k = k;
+  lab.innerHTML = `<input type="checkbox" ${on?"checked":""}>${swt}<span>${name}</span><span class="cnt">${k==="praster"?"":num(n)}</span>`;
+  lab.querySelector("input").addEventListener("change",e=>{ if(e.target.checked) layer.addTo(map); else map.removeLayer(layer); }); lyrBox.appendChild(lab);
+  if(k==="along"){ const lg = document.createElement("div"); lg.className="legend"; lg.innerHTML = `<span><i style="height:3px"></i>along-street line (hover: second-lane status)</span><span><i style="height:3px;background:linear-gradient(#1baf7a 0 30%,#fff 30% 70%,#1baf7a 70%)"></i>repeated by a second lane</span>`; lyrBox.appendChild(lg); } });
+document.getElementById("sub").textContent = `Ground-penetrating radar (IDS Stream UP), 13–17 Oct 2025 · ${K.n_drives} drives · ${Math.round(K.km)} km. ${K.n_repeat} drives (${Math.round(K.km_repeat)} km) have a second lane within 0.5–1.2 m; ${K.n_single} (${Math.round(K.km_single)} km) were driven once.`;
+const E = LN.e50 || {};
+const stats = [[`${num(LN.n)} lines · ${fmt(LN.km,1)} km`,"pipes along the street, on "+K.n_drives+" drives"]];
+if(LN.e50) stats.push([`${pct(E.share_test)} vs ${pct(E.null_test)}`,"of line length repeated by a second lane on held-out streets, real vs shifted"]);
+if(K.lanes) stats.push([`${K.lanes.n_positive} of ${K.lanes.n_groups}`,`street groups where two lanes agree at cell level (${pct(K.lanes.f)} vs ${pct(K.lanes.f_null)} shifted)`]);
+if(K.cross) stats.push([`${pct(K.cross.C1.rate)} vs ${pct(K.cross.C1.chance_rate)}`,"of crossing pipes seen by both radar rows, real vs chance"]);
+stats.push([`0.33 m · 0.2 m`,"not evaluated: the top 0.33 m, and the outer 0.2 m of each side of the swath"]);
+document.getElementById("stats").innerHTML = stats.map(s=>`<b>${s[0]}</b><span>${s[1]}</span>`).join("");
+// ---- At a glance: every number is computed from the cached files by the builder
+const tiles = [[`${Math.round(K.km)} km`,`of street surveyed in 5 days, ${K.n_drives} drives`],[`${fmt(LN.km,1)} km`,`of along-street pipe lines (${num(LN.n)} lines)`]];
+if(K.cross) tiles.push([`${num(K.cross.n_conf)}`,`crossing pipes seen by both radar rows (${num(K.cross.n_prob)} more by one row), ${K.cross.n_drives} drives scanned`]);
+document.getElementById("glance").innerHTML = tiles.map(t=>`<div class="tile"><b>${t[0]}</b><span>${t[1]}</span></div>`).join("");
+// ---- Filter of the along-street lines (second-lane status, minimum evidence)
+const alongParts = []; L_.along[0].eachLayer(g=>{ if(g.eachLayer) g.eachLayer(l=>{ if(l.feature) alongParts.push([g,l]); }); });
+const lineShow = p => { const m = document.getElementById("lf").value; const pm = +document.getElementById("lp").value;
+  return p.P >= pm - 1e-9 && (m==="all" || (m==="covered" && p.rep!=="uncovered") || (m==="repeated" && p.rep==="repeated")); };
+function applyLineFilter(){
+  let n = 0; alongParts.forEach(([g,l])=>{ const show = lineShow(l.feature.properties); n += show && g===alongParts[alongParts.length-1][0] ? 1 : 0; if(show && !g.hasLayer(l)) g.addLayer(l); else if(!show && g.hasLayer(l)) g.removeLayer(l); });
+  if(L_.alongCore){ map.removeLayer(L_.alongCore); L_.alongCore = null; L_.along[0].fire("add"); }
+  document.getElementById("lpv").textContent = fmt(+document.getElementById("lp").value); const c = lyrBox.querySelector(`label.lyr[data-k="along"] .cnt`); if(c) c.textContent = `${num(n)} of ${num(DATA.along.length)}`;
+}
+window.lineShow = lineShow; document.getElementById("lf").addEventListener("change", applyLineFilter); document.getElementById("lp").addEventListener("input", applyLineFilter);
+// ---- Tour: repeated lines first, then the longest high-evidence lines, then the strongest crossings
+const mid = f => { const c = f.geometry.coordinates; const m = c[Math.floor(c.length/2)]; return [m[1], m[0]]; };
+const rank = f => (f.properties.rep==="repeated" ? 2 : 0) + f.properties.P + f.properties.length_m/1000;
+const tourLines = DATA.along.slice().sort((a,b)=>rank(b)-rank(a)).slice(0, 10).map(f=>({ll:mid(f), html:popupAlong(f.properties), head:`Along-street line, ${f.properties.rep==="repeated"?"repeated by a second lane":"one drive"}`}));
+const crossRank = f => (f.properties.support.includes("agree") ? 2 : 0) + (f.properties.kind==="confident" ? 1 : 0) + f.properties.P;
+const tourCross = DATA.cross.slice().sort((a,b)=>crossRank(b)-crossRank(a)).slice(0, 5).map(f=>({ll:mid(f), html:popupCross(f.properties), head:`Crossing pipe, ${f.properties.support}`}));
+const TOUR = tourLines.concat(tourCross); let ti = -1;
+function tourGo(d){ if(!TOUR.length) return; ti = (ti + d + TOUR.length) % TOUR.length; const t = TOUR[ti]; map.setView(t.ll, 20);
+  document.getElementById("tpos").textContent = `${ti+1} of ${TOUR.length}`; document.getElementById("tcap").textContent = t.head; showDetail(t.html); }
+document.getElementById("tnext").onclick = ()=> tourGo(1); document.getElementById("tprev").onclick = ()=> tourGo(-1);
+// ---- Export: the drawn lines and crossings as GeoJSON (WGS84), with the same properties as the popups
+document.getElementById("dl").onclick = ()=>{
+  const note = "Radar only, provisional: not checked against the gas network map. Positions from the real-time GPS track, uncertainty 0.3-1 m or more.";
+  const feats = DATA.along.filter(f=>lineShow(f.properties)).concat(DATA.cross).map(f=>({type:"Feature", geometry:f.geometry, properties:Object.assign({note}, f.properties)}));
+  const blob = new Blob([JSON.stringify({type:"FeatureCollection", name:"Savona pipe map (SmartAuger, IDS Stream UP, 13-17 Oct 2025)", features:feats})], {type:"application/geo+json"});
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "savona_pipes_provisional.geojson"; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+};
+const chk = [];
+chk.push(`<div class="chk"><b>Raster.</b> P is measured against the same data with the antenna order shuffled, so a green cell is one that pipe-free data does not reproduce. Not yet checked against a gas map.</div>`);
+chk.push(`<div class="chk"><b>Line rule.</b> Cells with P &ge; ${RU.p_min}, followed in 0.5 m steps within ${RU.gate_u_m} m sideways and ${RU.depth_step_m} m in depth, up to ${RU.gap_m} m of missing signal bridged, at least ${RU.min_len_m} m. Reflections stacked in depth at one position are drawn once (${num(LN.n_raw_runs)} runs became ${num(LN.n)} lines). The top ${RU.depth_min_m} m (two-way time below ${RU.t_min_ns} ns) and the columns beyond ${RU.u_min_m} and ${RU.u_max_m} m from the drive centre are not evaluated: there the same strong signal sits at fixed positions of the antenna array in a quarter or more of all drives, which is the instrument, not pipes. The evaluated swath is ${fmt(RU.u_max_m-RU.u_min_m,2)} m wide; the ribbons show the full footprint.</div>`);
+if(LN.e50) chk.push(`<div class="chk"><b>Why these thresholds.</b> ${E.n_rules} candidate rules were scored by how much of their line length a drive in another lane reproduces, chosen on the streets of 13&ndash;14 Oct and judged on those of 15&ndash;17 Oct. This rule ranks ${E.rank_selection} of ${E.n_rules} on the choosing streets and ${E.rank_test} on the judging streets, where ${pct(E.share_test)} of the covered line length is repeated within ${RU.tol_m} m against ${pct(E.null_test)} when the other lane's lines are shifted along or across the street. The stricter rule used before (P &ge; 0.9, one 0.5 m gap, 0.12 m) was repeated on ${pct(E.share_current)}.</div>`);
+chk.push(`<div class="chk"><b>Shuffle reference (weak).</b> The same rule on the same drives with their ${RU.block_m} m blocks shuffled (${RU.n_draws} draws) still gives ${num(Math.round(LN.chance_n))} lines, ${pct(LN.n?LN.chance_n/LN.n:null)} of the real count: a straight pipe survives a shuffle, so this does not grade a line; the second-lane test above does.</div>`);
+chk.push(`<div class="chk"><b>Second lane, line by line.</b> ${num(LN.n_covered)} lines (${num(LN.m_covered)} m) lie where a drive in another lane also passed; ${LN.n_repeated} of them (${num(LN.m_repeated)} m) are repeated by that drive on at least ${pct(RU.repeat_min_share)} of their length within ${RU.tol_m} m. <span class="m">A line seen by one drive can be a reflection fixed to the vehicle; a repeat from a lane at least ${RU.min_sep_m} m away rules that out.</span></div>`);
+if(K.lanes) chk.push(`<div class="chk"><b>Lane agreement at cell level (E47).</b> Of ${K.lanes.n_groups} street groups with repeat drives, ${K.lanes.n_positive} show agreement between lanes beyond what mirrored or shifted drives give (${fmt(K.lanes.expected,2)} expected by chance, p = ${fmt(K.lanes.p,3)}); pooled, ${pct(K.lanes.f)} of evidence cells are repeated vs ${pct(K.lanes.f_null)} after shifting.</div>`);
+if(K.cross) chk.push(`<div class="chk"><b>Crossing pipes</b> (${K.cross.n_drives} drives scanned). Both radar rows agree on ${pct(K.cross.C1.rate)} of 600 MHz crossings, against ${pct(K.cross.C1.chance_rate)} by chance. ${K.cross.C4.hit} of ${K.cross.C4.n_record_crossings} places where a municipal record crosses a drive have a confident crossing within 1.5 m (${pct(K.cross.C4.rate)}, chance ${pct(K.cross.C4.chance_rate)}, p = ${fmt(K.cross.C4.p,3)}).</div>`);
+document.getElementById("checks").innerHTML = chk.join("");
+const st = document.getElementById("streets");
+DATA.areas.forEach(a=>{ const b = document.createElement("button"); b.innerHTML = `${a.name}<small>${a.note}</small>`; b.onclick = ()=> { location.hash = a.key; }; st.appendChild(b); });
+const pad = ()=> innerWidth > 640 ? {paddingTopLeft:[document.getElementById("panel").offsetWidth + 30, 30], paddingBottomRight:[30, 30]} : {padding:[20, 20]};
+const fromHash = ()=>{ const m = location.hash.match(/^#(-?[\d.]+),(-?[\d.]+),(\d+)$/); if(m){ map.setView([+m[1], +m[2]], +m[3]); return; }
+  const a = DATA.areas.find(x=>"#"+x.key===location.hash) || DATA.areas[0]; map.fitBounds(a.bounds, pad()); };
+fromHash(); window.addEventListener("hashchange", fromHash); L_.praster[0].refresh && L_.praster[0].refresh();
+document.getElementById("rop").addEventListener("input",e=>{ const v = +e.target.value; L_.praster[0].eachLayer(l=>l.setOpacity(v)); });
+document.getElementById("bop").addEventListener("input",e=> cur.setOpacity(+e.target.value));
+document.getElementById("bm").addEventListener("change",e=>{ map.removeLayer(cur); if(e.target.value!=="none"){ cur = base[e.target.value].addTo(map); cur.setOpacity(+document.getElementById("bop").value);} });
+const co = document.getElementById("coords");
+map.on("mousemove",e=> co.textContent = `${e.latlng.lat.toFixed(6)} N, ${e.latlng.lng.toFixed(6)} E`);
+map.on("moveend",()=>{ const c = map.getCenter(); history.replaceState(null, "", `#${c.lat.toFixed(6)},${c.lng.toFixed(6)},${map.getZoom()}`); });
+document.getElementById("toggle").onclick = ()=> document.getElementById("panel").classList.toggle("hide");
+if(innerWidth <= 640) document.getElementById("panel").classList.add("hide");
+</script>
+</body>
+</html>

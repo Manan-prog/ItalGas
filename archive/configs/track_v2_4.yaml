@@ -1,0 +1,7 @@
+# Track settings for future runs (v2.4). Use by copying into a base config's "track" section.
+track:
+  source: path
+  smooth_win: 11
+  along_travel_bias_m: 1.19   # DERIVED (E25): half the mean gap between opposite-direction drives (2.38 m, 27 crossings, Via Nizza),
+                              # consistent sign on 3 streets / 3 days; uncertainty about +-0.3 m; valid for 8-12 m/s
+                              # (cause timing vs mounting unresolved; calibration drive over a plate at two speeds planned)

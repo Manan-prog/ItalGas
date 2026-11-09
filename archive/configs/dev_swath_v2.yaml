@@ -1,0 +1,32 @@
+# v2 detector (3 Nov 2026). Frozen before the first scored run (see DECISIONS.md).
+base_config: configs/dev_swath.yaml     # survey, swath, track, dewow, t0, alignment, bandpass
+seed: 0
+cube_file: cube_Swath001_2025.10.14_11.31.18_2d9b11acb1.npz   # per-scan (s, u) of every channel
+preprocess:
+  background: median                    # median trace over all traces of the channel
+  filter: wiener                        # zero-phase W(f) from mean signal / noise spectra over all traces
+  wiener_signal_ns: {1: [2, 17], 2: [3, 28]}      # early window (signal + clutter), ns after t0
+  wiener_noise_ns: {1: [42, 57], 2: [68, 93]}     # late window (receiver noise), ns after t0
+  gain: noise_equalising                # divide by robust spread of all traces at each time
+  gain_smooth_ns: 2.0
+  t_max_ns: {1: 40.0, 2: 60.0}          # processed window (beyond: receiver noise only, E09)
+  burst_factor: 3.0                     # scan energy > factor x 10 m running median -> zeroed
+migration:
+  velocity_m_ns: 0.10                   # DERIVED (E03), 0.10 +- 0.02
+  v_apparent_m_ns: [0.10, 0.115, 0.14, 0.20]   # v / cos(phi) for phi about 0, 30, 45, 60 deg
+  aperture_m: 1.2
+grid:
+  ds_m: 0.05
+  t_down: 4                             # envelope averaged over 4 samples
+crossing:
+  phi_deg: [-60, 60, 5]                 # deviation from perpendicular to track
+  keep_frac: 0.75                       # trimmed mean over the lowest 75 percent of channels
+  tol_cells: [3, 3]
+  flank_m: [0.6, 1.5]                   # pipe = thin line: compare with brighter flank 0.6-1.5 m either side
+  n_surrogates: 8
+  min_shift_m: 30.0
+  t_min_ns: 4.0                         # 0.2 m: below this, pavement joints and surface
+  snr_min: 1.3                          # search only where median sigma(t)/floor >= this
+  sep_m: 1.0
+  sep_ns: 6.0
+  q_max: 0.05

@@ -1,0 +1,7 @@
+# Step 1: two-drive apex test on all overlapping drive pairs (200 MHz). Detector = v2.2.
+detector_config: configs/dev_swath_v2_2.yaml
+raw_root: ${ITALGAS_DATA}/Savona
+swath_tracks: ${ITALGAS_DATA}/cache/swaths.npz   # built by build_swath_tracks.py
+depth_slices_m: [[0.3, 0.5], [0.5, 0.7], [0.7, 0.9], [0.9, 1.1], [1.1, 1.4]]
+tie: {max_ds_m: 3.0, max_dphi_deg: 10.0, max_dz_m: 0.15}
+n_controls_per_pair: 60

@@ -1,0 +1,28 @@
+# Background-removal test for along-street pipes (DECISIONS 2026-11-03): fake pipes injected into RAW 200 MHz traces.
+detector_config: configs/dev_swath_v2_2.yaml
+raw_root: /Users/manansarupria/ItalGas/Savona
+chunk_m: 600.0                 # m, same pieces as the city scan
+pad_m: 30.0
+keep_q: 0.2
+along_travel_bias_m: 1.19      # m, ASSUMED (only used for map coordinates, not in this test's matching)
+pp_fail_m: 5.0
+regions:                       # drive and window (m along the drive's own track)
+  ricci: [savona 14.10.2025 matt_2025.10.14_11.31.18, Survey_2025-10-14_11-37-03, Swath001, 0.0, 1216.0]
+  fontanassa: [savona 1410 matt_2025.10.15_09.07.28, Survey_2025-10-15_09-11-09, Swath016, 0.0, 1066.0]
+  nizza: [savona 13.10.2025 matt_2025.10.13_09.51.03, Survey_2025-10-13_10-01-51, Swath041, 2700.0, 3640.0]
+variants:                      # preprocess overrides for the along-street branch
+  A_piece_median: {background: median, lateral_background: false}
+  B_day_signature: {background: signature, lateral_background: false}
+  C_signature_lateral: {background: signature, lateral_background: true}
+  D_lateral_only: {background: none, lateral_background: true}
+pipes:                         # fractions of the window; du = offset from the strip centre (m); amp set per run
+  set1:
+    - {f0: 0.03, f1: 0.53, du: 0.0, z: 1.10, wander_m: 0.0}
+    - {f0: 0.58, f1: 0.83, du: 0.38, z: 0.45, wander_m: 0.15}
+    - {f0: 0.88, f1: 0.93, du: -0.43, z: 0.60, wander_m: 0.15}
+  set2:
+    - {f0: 0.03, f1: 0.53, du: -0.43, z: 0.60, wander_m: 0.15}
+    - {f0: 0.58, f1: 0.83, du: 0.0, z: 1.25, wander_m: 0.0}
+    - {f0: 0.88, f1: 0.93, du: 0.38, z: 0.45, wander_m: 0.0}
+runs: [[none, 0], [set1, 5.0], [set2, 3.0]]
+match: {du_m: 0.15, dz_m: 0.15, min_cover: 0.5}

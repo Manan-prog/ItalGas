@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Savona Pipe Map</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+:root{--surface:#fcfcfb;--ink:#1f1f1f;--muted:#5f6368;--line:#e3e3e0;--chip:#f1f1ee;--accent:#2a78d6;--shadow:0 2px 14px rgba(0,0,0,.18)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--surface:#1c1d1f;--ink:#ececea;--muted:#a3a6aa;--line:#34363a;--chip:#2a2c30;--accent:#5b9be6;--shadow:0 2px 14px rgba(0,0,0,.5)}}
+:root[data-theme="dark"]{--surface:#1c1d1f;--ink:#ececea;--muted:#a3a6aa;--line:#34363a;--chip:#2a2c30;--accent:#5b9be6;--shadow:0 2px 14px rgba(0,0,0,.5)}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--surface);color:var(--ink);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+#map{position:absolute;inset:0;background:#0d0f12}
+#panel{position:absolute;top:12px;left:12px;z-index:1000;width:min(360px,calc(100vw - 32px));max-height:calc(100% - 24px);overflow:auto;background:var(--surface);
+  border-radius:10px;box-shadow:var(--shadow);padding:14px 16px 12px}
+#panel h1{font-size:17px;margin:0 0 2px;font-weight:650;letter-spacing:-.01em}
+.sub{color:var(--muted);font-size:12.5px;margin:0 0 10px}
+.sec{border-top:1px solid var(--line);padding-top:9px;margin-top:9px}
+.sec h2{font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 6px;font-weight:600}
+.streets{display:flex;flex-wrap:wrap;gap:6px}
+.streets button{flex:1 1 auto;border:1px solid var(--line);background:var(--chip);color:var(--ink);border-radius:7px;padding:6px 8px;font:inherit;font-size:12.5px;cursor:pointer;text-align:left}
+.streets button:hover{border-color:var(--accent)}
+.streets small{display:block;color:var(--muted);font-size:11px}
+label.lyr{display:flex;align-items:center;gap:8px;padding:3px 0;cursor:pointer;font-size:13px}
+label.lyr input{margin:0;accent-color:var(--accent)}
+.sw{flex:0 0 30px;height:12px;display:inline-block;position:relative}
+.cnt{margin-left:auto;color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+.ramp{height:10px;border-radius:3px;margin:4px 0 2px;background:linear-gradient(90deg,rgba(90,26,10,.4),rgba(184,64,28,.7) 30%,rgba(235,104,52,.88) 60%,rgba(255,179,107,.96) 85%,rgb(255,244,204))}
+.rampx{display:flex;justify-content:space-between;color:var(--muted);font-size:11px}
+.row{display:flex;align-items:center;gap:8px;font-size:12.5px;margin:4px 0}
+.row input[type=range]{flex:1}
+.row select{font:inherit;font-size:12.5px;background:var(--chip);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:2px 4px}
+details{font-size:12.5px;color:var(--ink)}
+details summary{cursor:pointer;color:var(--accent);font-weight:550}
+details p{margin:6px 0}
+.warn{font-size:12px;color:var(--muted);margin-top:8px}
+#toggle{display:none;position:absolute;top:12px;left:12px;z-index:1001;border:0;border-radius:8px;background:var(--surface);color:var(--ink);box-shadow:var(--shadow);padding:8px 12px;font:inherit;cursor:pointer}
+#coords{position:absolute;right:10px;bottom:22px;z-index:1000;background:rgba(20,22,25,.7);color:#f2f2f2;font:11.5px ui-monospace,Menlo,monospace;padding:3px 7px;border-radius:5px;pointer-events:none}
+.leaflet-popup-content{font:13px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;margin:10px 12px;min-width:230px}
+.pp h3{margin:0 0 4px;font-size:14px}
+.pp table{border-collapse:collapse;width:100%;font-size:12.5px}
+.pp td{padding:2px 0;vertical-align:top}
+.pp td:first-child{color:#5f6368;padding-right:10px;white-space:nowrap}
+.pp .nt{color:#3c4043;font-size:12px;margin-top:6px}
+.leaflet-image-layer{image-rendering:pixelated}
+.chk{font-size:12.5px;margin:4px 0;color:var(--ink)}
+.chk b{font-variant-numeric:tabular-nums}
+.chk .m{color:var(--muted)}
+@media (max-width:640px){#panel{top:56px;max-height:calc(100% - 68px)}#panel.hide{display:none}#toggle{display:block}}
+</style>
+</head>
+<body>
+<div id="map"></div>
+<button id="toggle" aria-controls="panel">Layers</button>
+<div id="panel">
+  <h1>Savona pipe map</h1>
+  <p class="sub" id="sub"></p>
+  <div class="sec"><h2>Go to</h2><div class="streets" id="streets"></div></div>
+  <div class="sec"><h2>Layers</h2><div id="layers"></div></div>
+  <div class="sec"><h2>Chance of a pipe (glow)</h2>
+    <div class="ramp"></div><div class="rampx"><span>low</span><span>0.5</span><span>high (1.0)</span></div>
+    <div class="row"><span>Glow opacity</span><input type="range" id="rop" min="0" max="1" step="0.05" value="0.9"></div>
+    <div class="rampx"><span id="rres"></span></div>
+  </div>
+  <div class="sec"><h2>Basemap</h2>
+    <div class="row"><select id="bm"><option value="sat">Satellite (Esri World Imagery)</option><option value="osm">Streets (OpenStreetMap)</option><option value="none">None</option></select>
+    <input type="range" id="bop" min="0.2" max="1" step="0.05" value="0.8" aria-label="Basemap opacity"></div>
+  </div>
+  <div class="sec"><h2>How sure are these?</h2><div id="checks"></div></div>
+  <div class="sec"><details><summary>How to read this map</summary>
+    <p><b>Grey ribbons</b> show where the radar passed. Each drive covers a strip about 1.5 m wide under the van. Click a ribbon for that drive's positioning quality.</p>
+    <p><b>Glow</b> shows the chance that a pipe lies under that spot, from 0 (none) to 1 (bright), worked out from the radar of every drive. Pipes crossing the drive are blurred along the street by their position uncertainty, so a poorly placed pipe shows as a wider, dimmer band. Pipes running along the street are added with the chance measured from repeat drives (see "How sure are these?"). Where drives overlap, the highest value is shown. Zoom in for finer cells (0.15 m from zoom 17).</p>
+    <p><b>Blue lines</b> are pipes crossing the street. Thick: confident (both radar rows saw it). Thin: seen by one row with chance 0.9 or more.</p>
+    <p><b>Green lines</b> are pipes that may run <i>along</i> the street. Solid: confirmed by drives in independent lanes, above chance. Dashed: candidates (one drive, or a repeat that is not above chance). Candidates add nothing to the glow, because their chance of being a pipe has not been measured above zero.</p>
+    <p>Evenly spaced crossings on bridges or over culverts are probably structure (deck beams, joints, rebar), not pipes.</p>
+    <p>Positions come from the real-time GPS track, moved 1.19 m forward along the direction of travel to correct an assumed timing bias. They can be out by 0.3 to 1 m or more; each popup gives the measured uncertainty where it exists.</p>
+  </details>
+  <p class="warn">No Italgas network map has been received, so nothing on this map has been checked against the real gas network. Municipal sewer and storm records (Comune di Savona, CC BY 4.0) are shown for comparison only.</p></div>
+</div>
+<div id="coords"></div>
+<script>
+const DATA = /*__DATA__*/null;
+const C = {blue:"#2a78d6", aqua:"#1baf7a", strip:"#3b4652", stripEdge:"#e6ebf0", track:"#e6ebf0", rec:"#d0d0d0"};
+const map = L.map("map", {zoomControl:true, maxZoom:22, preferCanvas:true});
+L.control.scale({metric:true, imperial:false, position:"bottomleft", maxWidth:160}).addTo(map);
+[["tracks",340],["strips",350],["raster",360],["records",380],["cross",400],["along",410],["pins",420]].forEach(([n,z])=>{map.createPane(n).style.zIndex=z;});
+const R = {}; ["tracks","strips","records","cross","along","pins"].forEach(n=> R[n] = L.canvas({pane:n}));
+const base = {
+  sat: L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {maxNativeZoom:19, maxZoom:22, attribution:"Imagery &copy; Esri, Maxar, Earthstar Geographics"}),
+  osm: L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {maxNativeZoom:19, maxZoom:22, attribution:"&copy; OpenStreetMap contributors"})
+};
+let cur = base.sat.addTo(map); cur.setOpacity(0.8);
+const fmt = (v,d=2)=> (v===null||v===undefined||Number.isNaN(v)) ? "n/a" : Number(v).toFixed(d);
+const pct = v => v===null||v===undefined ? "n/a" : Math.round(100*v)+"%";
+const sig = s => s ? `${fmt(s[0])} m along, ${fmt(s[1])} m across (1&sigma;, lower bound)` : "not measured here (post-processed track missing or failed); glow uses 1 m (assumed)";
+const RTK = {4:"RTK fixed", 5:"RTK float", 1:"GPS only", 2:"differential", 6:"dead reckoning"};
+const KIND = {confident:"Crossing pipe: confident", probable:"Crossing pipe: probable",
+  "along-lanes":"Along-street pipe: seen from two lanes (registered drives)", "along-conf":"Along-street pipe: confirmed by another drive", "along-rep":"Along-street pipe: repeated by another drive (candidate)", "along-cand":"Along-street pipe: one-drive candidate"};
+const NOTE = {"along-rep":"A drive in an independent lane (strip centres at least 0.5 m apart) saw a track within 0.4 m sideways and 0.2 m in depth over at least 10 m. Such agreement happens about as often by chance here (see 'How sure are these?'), so this is still a candidate.",
+  "along-cand":"Seen by one drive only (200 MHz row, significant against channel-shuffled data). One-drive tracks were at chance against municipal records in earlier tests (E15): treat as a lead, not a pipe.",
+  "along-conf":"Confirmed by repeat drives; city-wide chance of such agreement is in 'How sure are these?'.",
+  "along-lanes":"After lining up the drives of this street (registration), a drive in another lane (strip centres at least 0.5 m apart) shows evidence beyond pipe-free data at the same ground position, within 10 cm, over at least 10 m. The line is drawn at the stretch's median across-street position. Provisional until the gas map arrives."};
+function popup(p){
+  const rows = [["Drive",p.drive],["Seen by",p.support]];
+  if(p.kind==="along-lanes") rows.push(["Repeated between lanes (region)",fmt(p.P,2)+" of evidence cells, vs "+ (p.support.match(/vs ([\d.]+)/)||["",""])[1] +" on pipe-free data"]);
+  else if(p.P!==undefined) rows.push(["Chance of a pipe",fmt(p.P,2)]);
+  rows.push(["Depth to top", isFinite(p.depth_m)&&p.depth_m!==null ? fmt(p.depth_m)+" m (at 0.10 m/ns)" : "n/a"]);
+  if(p.angle_deg!==undefined) rows.push(["Angle from square across",fmt(p.angle_deg,0)+"&deg;"]);
+  if(p.length_m!==undefined) rows.push(["Length",fmt(p.length_m,1)+" m"]);
+  rows.push(["Position uncertainty",sig(p.sigma)]);
+  rows.push(["GPS at this spot",(RTK[p.rtk]||"unknown")+(p.pp_sd!==null&&p.pp_sd!==undefined?`; post-processed SD ${fmt(p.pp_sd)} m`:"")]);
+  const nt = NOTE[p.kind]||"";
+  return `<div class="pp"><h3>${KIND[p.kind]||p.kind}</h3><table>${rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join("")}</table>${nt?`<div class="nt">${nt}</div>`:""}<div class="nt">Radar only, provisional.</div></div>`;
+}
+function cased(fc, filter, style, pane){
+  const g = L.layerGroup(); const feats = fc.filter(filter);
+  L.geoJSON({type:"FeatureCollection",features:feats},{renderer:R[pane], interactive:false, style:()=>({color:"#ffffff",weight:style.weight+3,opacity:style.casing??0.85,dashArray:style.dashArray,lineCap:"round"})}).addTo(g);
+  L.geoJSON({type:"FeatureCollection",features:feats},{renderer:R[pane], style:()=>Object.assign({lineCap:"round"},style), onEachFeature:(f,l)=>l.bindPopup(()=>popup(f.properties),{maxWidth:330})}).addTo(g);
+  return [g, feats.length];
+}
+const L_ = {};
+L_.tracks = [L.geoJSON({type:"FeatureCollection",features:DATA.tracks},{renderer:R.tracks,interactive:false,style:{color:C.track,weight:1.2,opacity:0.5}}), DATA.tracks.length];
+L_.strips = [L.geoJSON({type:"FeatureCollection",features:DATA.strips},{renderer:R.strips,style:{color:C.stripEdge,weight:0.6,opacity:0.6,fillColor:C.strip,fillOpacity:0.55},
+  onEachFeature:(f,l)=>{ const p=f.properties; l.bindPopup(()=>`<div class="pp"><h3>Drive ${p.label}</h3><table><tr><td>Length</td><td>${fmt(p.length_km,2)} km</td></tr><tr><td>Crossings found</td><td>${p.n_cross} (both rows: ${p.n_A})</td></tr><tr><td>Along-street tracks</td><td>${p.n_tracks}</td></tr><tr><td>RTK fixed</td><td>${pct(p.rtk_fixed)} of the drive</td></tr><tr><td>Post-processed track usable</td><td>${pct(p.pp_ok)} of the drive</td></tr><tr><td>Median |real-time &minus; post-processed| along</td><td>${p.d_along_med===null?"n/a":fmt(p.d_along_med)+" m"}</td></tr></table></div>`,{maxWidth:330}); }}), new Set(DATA.strips.map(f=>f.properties.label)).size];
+// lazy rasters (three resolutions, only the tiles in view are attached): glow and the red-green P raster
+function lazyRaster(tiles, opacity){
+  const LV = Object.keys(tiles).map(Number).sort((a,b)=>b-a); if(!LV.length) return [L.layerGroup(), 0];
+  const TB = {}; LV.forEach(z=> TB[z] = tiles[z].map(t=>L.latLngBounds(t.bounds)));
+  const grp = L.layerGroup(); const active = new Map();
+  const level = ()=>{ const z = map.getZoom(); return LV.find(m=> z >= m); };
+  const refresh = ()=>{
+    if(!map.hasLayer(grp)) return;
+    const lv = level(), vb = map.getBounds().pad(0.25), want = new Set();
+    TB[lv].forEach((b,i)=>{ if(vb.intersects(b)) want.add(lv+":"+i); });
+    for(const [k,l] of active){ if(!want.has(k)){ grp.removeLayer(l); active.delete(k);} }
+    want.forEach(k=>{ if(!active.has(k)){ const [z,i] = k.split(":").map(Number); const t = tiles[z][i];
+      const l = L.imageOverlay(t.png, t.bounds, {pane:"raster", opacity:opacity, interactive:false}); grp.addLayer(l); active.set(k,l);} });
+    const el = document.getElementById("rres"); if(el) el.textContent = `cell size here: ${lv>=17?"0.15":lv>=15?"1.2":"4.8"} m`;
+  };
+  map.on("moveend", refresh); grp.on("add", ()=> setTimeout(refresh, 0)); grp.refresh = refresh;
+  return [grp, tiles[LV[0]].length];
+}
+L_.raster = lazyRaster(DATA.tiles, 0.9);
+L_.praster = lazyRaster(DATA.ptiles || {}, 0.85);
+const refreshRaster = ()=>{ L_.raster[0].refresh && L_.raster[0].refresh(); L_.praster[0].refresh && L_.praster[0].refresh(); };
+L_.conf = cased(DATA.cross, f=>f.properties.kind==="confident", {color:C.blue,weight:3.6,opacity:1}, "cross");
+L_.prob = cased(DATA.cross, f=>f.properties.kind==="probable", {color:C.blue,weight:1.6,opacity:0.95,casing:0.55}, "cross");
+L_.alongA = cased(DATA.along, f=>f.properties.kind==="along-conf"||f.properties.kind==="along-lanes", {color:C.aqua,weight:4,opacity:1}, "along");
+L_.alongB = cased(DATA.along, f=>f.properties.kind!=="along-conf"&&f.properties.kind!=="along-lanes", {color:C.aqua,weight:2.4,opacity:1,dashArray:"5 6",casing:0.6}, "along");
+L_.pins = (()=>{ const g = L.layerGroup();
+  L.geoJSON({type:"FeatureCollection",features:DATA.pinned},{renderer:R.pins,style:{color:C.aqua,weight:2.5,opacity:0.95,dashArray:"2 6"},
+    onEachFeature:(f,l)=>l.bindPopup(`<div class="pp"><h3>Pinned along-street segment</h3><table><tr><td>Length</td><td>${f.properties.length_m} m</td></tr><tr><td>Depth</td><td>${f.properties.depth} m</td></tr><tr><td>Offset from drive</td><td>${f.properties.u} m</td></tr></table><div class="nt">Two junction pins on the same street that agree within 1 m sideways and 0.25 m in depth (5 of 22 pairs vs 1.9 by chance, p = 0.03, E30). Joined along the drive path; nothing between the pins is measured.</div></div>`)}).addTo(g);
+  L.geoJSON({type:"FeatureCollection",features:DATA.pins},{pointToLayer:(f,ll)=>L.circleMarker(ll,{renderer:R.pins,radius:f.properties.support>=2?6:3.5,color:"#ffffff",weight:1.2,fillColor:C.aqua,fillOpacity:1}),
+    onEachFeature:(f,l)=>l.bindPopup(`<div class="pp"><h3>Junction pin</h3><table><tr><td>Depth</td><td>${fmt(f.properties.depth_m)} m</td></tr><tr><td>Crossing drives</td><td>${f.properties.support}</td></tr></table><div class="nt">A pipe running along this street, seen as a crossing pipe by a drive that crosses the street (both radar rows, E30).</div></div>`)}).addTo(g);
+  return [g, DATA.pins.length]; })();
+L_.records = [L.geoJSON({type:"FeatureCollection",features:DATA.records},{renderer:R.records,style:f=>({color:C.rec,weight:f.properties.kind==="storm"?1.6:2,opacity:0.9,dashArray:f.properties.kind==="storm"?"7 5":"1 5",lineCap:"round"}),
+  onEachFeature:(f,l)=>l.bindPopup(`<div class="pp"><h3>Municipal ${f.properties.kind} pipe record</h3><table><tr><td>Diameter</td><td>${f.properties.diam||"n/a"}</td></tr><tr><td>Material</td><td>${f.properties.mat||"n/a"}</td></tr><tr><td>Depth start/end</td><td>${f.properties.depth}</td></tr><tr><td>Street</td><td>${f.properties.street||"n/a"}</td></tr></table><div class="nt">Comune di Savona SIT (CC BY 4.0). Not gas; position accuracy of the record unknown.</div></div>`)}), DATA.records.length];
+const sw = (c,w,d)=>`<svg class="sw" viewBox="0 0 30 12"><line x1="2" y1="6" x2="28" y2="6" stroke="${c}" stroke-width="${w}" ${d?`stroke-dasharray="${d}"`:""} stroke-linecap="round"/></svg>`;
+const LAYERS = [
+  ["tracks","All drives of the survey",sw("#9aa3ad",1.6),true],
+  ["strips","Scanned areas (radar strips)",`<svg class="sw" viewBox="0 0 30 12"><rect x="1" y="1" width="28" height="10" rx="2" fill="${C.strip}" fill-opacity=".75" stroke="#9aa3ad" stroke-width=".8"/></svg>`,true],
+  ["raster","Chance of a pipe (glow)",`<span class="sw ramp" style="margin:0"></span>`,true],
+  ["praster","Along-street evidence P, red (0) to green (1)",`<span class="sw" style="margin:0;height:10px;border-radius:3px;background:linear-gradient(90deg,#c0392b,#efe9dc 50%,#1a9850)"></span>`,false],
+  ["conf","Crossing pipes: confident",sw(C.blue,4),true],
+  ["prob","Crossing pipes: probable (one row)",sw(C.blue,1.8),true],
+  ["alongA","Along-street: seen from two lanes (registered)",sw(C.aqua,4),true],
+  ["alongB","Along-street: candidates (unconfirmed)",sw(C.aqua,2.4,"5 4"),true],
+  ["pins","Junction pins",`<svg class="sw" viewBox="0 0 30 12"><circle cx="15" cy="6" r="4.5" fill="${C.aqua}" stroke="#fff"/></svg>`,false],
+  ["records","Municipal sewer/storm records",sw("#8a8a8a",1.6,"5 3"),false]];
+const lyrBox = document.getElementById("layers");
+LAYERS.forEach(([k,name,swt,on])=>{ const [layer,n] = L_[k]; if(on) layer.addTo(map);
+  const lab = document.createElement("label"); lab.className="lyr";
+  lab.innerHTML = `<input type="checkbox" ${on?"checked":""}>${swt}<span>${name}</span><span class="cnt">${k==="raster"?n+" tiles":k==="strips"?n+" drives":n}</span>`;
+  lab.querySelector("input").addEventListener("change",e=> e.target.checked ? layer.addTo(map) : map.removeLayer(layer)); lyrBox.appendChild(lab); });
+const K = DATA.checks;
+document.getElementById("sub").textContent = `Ground-penetrating radar (IDS Stream UP), 13 to 17 Oct 2025. ${K.label}: ${K.n_drives} drives, ${Math.round(K.km)} km. Radar only, provisional.`;
+const chk = [];
+chk.push(`<div class="chk"><b>Both radar rows agree</b> on ${pct(K.C1.rate)} of 600 MHz crossings, against ${pct(K.C1.chance_rate)} by chance. A crossing seen by both rows is very unlikely to be noise.</div>`);
+const r3 = K.C2[">=3"], r2 = K.C2[">=2"];
+chk.push(`<div class="chk"><b>Repeat drives, crossings:</b> ${r2.real} places seen by 2+ drives (chance ${fmt(r2.chance,1)}), ${r3.real} by 3+ (chance ${fmt(r3.chance,1)}). <span class="m">Drives are not aligned to each other city-wide, so real agreements are missed.</span>${K.repeat_rule?"":" <span class='m'>3+ drives is not used for 'confident' here (chance above 20%).</span>"}</div>`);
+if(K.C3.n_tracks){ chk.push(`<div class="chk"><b>Repeat drives, along-street:</b> of ${K.C3.n_double_covered} one-drive tracks where another drive also passed, ${K.C3.confirmed_real} were seen again (chance ${K.C3.confirmed_chance}). Chance of a repeat agreement being coincidence: ${pct(K.C3.chance_over_real)}.${K.along_rule?"":" <span class='m'>Below the confidence bar, so along-street lines stay candidates.</span>"}</div>`); }
+chk.push(`<div class="chk"><b>Municipal records</b> (sewer/storm, not gas): ${K.C4.hit} of ${K.C4.n_record_crossings} places where a record crosses a drive have a confident crossing within 1.5 m (${pct(K.C4.rate)}, chance ${pct(K.C4.chance_rate)}, p = ${fmt(K.C4.p,3)}). Leaving out the drives used to tune the method: ${K.C4h.hit} of ${K.C4h.n_record_crossings} (${pct(K.C4h.rate)}, chance ${pct(K.C4h.chance_rate)}, p = ${fmt(K.C4h.p,3)}).</div>`);
+document.getElementById("checks").innerHTML = chk.join("");
+const st = document.getElementById("streets");
+DATA.areas.forEach(a=>{ const b = document.createElement("button"); b.innerHTML = `${a.name}<small>${a.note}</small>`; b.onclick = ()=> { location.hash = a.key; }; st.appendChild(b); });
+const pad = ()=> innerWidth > 640 ? {paddingTopLeft:[document.getElementById("panel").offsetWidth + 30, 30], paddingBottomRight:[30, 30]} : {padding:[20, 20]};
+const fromHash = ()=>{ const m = location.hash.match(/^#(-?[\d.]+),(-?[\d.]+),(\d+)$/); if(m){ map.setView([+m[1], +m[2]], +m[3]); return; }
+  const a = DATA.areas.find(x=>"#"+x.key===location.hash) || DATA.areas[0]; map.fitBounds(a.bounds, pad()); };
+fromHash(); window.addEventListener("hashchange", fromHash); refreshRaster();
+document.getElementById("rop").addEventListener("input",e=>{ const v = +e.target.value; L_.raster[0].eachLayer(l=>l.setOpacity(v)); L_.praster[0].eachLayer(l=>l.setOpacity(v)); });
+document.getElementById("bop").addEventListener("input",e=> cur.setOpacity(+e.target.value));
+document.getElementById("bm").addEventListener("change",e=>{ map.removeLayer(cur); if(e.target.value!=="none"){ cur = base[e.target.value].addTo(map); cur.setOpacity(+document.getElementById("bop").value);} });
+const co = document.getElementById("coords");
+map.on("mousemove",e=> co.textContent = `${e.latlng.lat.toFixed(6)} N, ${e.latlng.lng.toFixed(6)} E`);
+map.on("moveend",()=>{ const c = map.getCenter(); history.replaceState(null, "", `#${c.lat.toFixed(6)},${c.lng.toFixed(6)},${map.getZoom()}`); });
+document.getElementById("toggle").onclick = ()=> document.getElementById("panel").classList.toggle("hide");
+if(innerWidth <= 640) document.getElementById("panel").classList.add("hide");
+</script>
+</body>
+</html>

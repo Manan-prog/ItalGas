@@ -1,0 +1,91 @@
+# Stack-length test E37 (DECISIONS 2026-11-04): option C with 2/5/10 m coherent stacks vs frozen v2.2; weaker pipes than E35.
+detector_config: configs/dev_swath_v2_2.yaml
+raw_root: /Users/manansarupria/ItalGas/Savona
+chunk_m: 600.0
+pad_m: 30.0
+keep_q: 0.2
+along_travel_bias_m: 1.19
+pp_fail_m: 5.0
+regions:
+  ricci:
+  - savona 14.10.2025 matt_2025.10.14_11.31.18
+  - Survey_2025-10-14_11-37-03
+  - Swath001
+  - 0.0
+  - 1216.0
+  fontanassa:
+  - savona 1410 matt_2025.10.15_09.07.28
+  - Survey_2025-10-15_09-11-09
+  - Swath016
+  - 0.0
+  - 1066.0
+  nizza:
+  - savona 13.10.2025 matt_2025.10.13_09.51.03
+  - Survey_2025-10-13_10-01-51
+  - Swath041
+  - 2700.0
+  - 3640.0
+variants:
+  A2_frozen_v22:
+    background: median
+    lateral_background: false
+  C2:
+    background: signature
+    lateral_background: true
+    longitudinal:
+      win_m: 2.0
+  C5:
+    background: signature
+    lateral_background: true
+    longitudinal:
+      win_m: 5.0
+  C10:
+    background: signature
+    lateral_background: true
+    longitudinal:
+      win_m: 10.0
+pipes:
+  set1:
+  - f0: 0.03
+    f1: 0.53
+    du: 0.0
+    z: 1.1
+    wander_m: 0.0
+  - f0: 0.58
+    f1: 0.83
+    du: 0.38
+    z: 0.45
+    wander_m: 0.15
+  - f0: 0.88
+    f1: 0.93
+    du: -0.43
+    z: 0.6
+    wander_m: 0.15
+  set2:
+  - f0: 0.03
+    f1: 0.53
+    du: -0.43
+    z: 0.6
+    wander_m: 0.15
+  - f0: 0.58
+    f1: 0.83
+    du: 0.0
+    z: 1.25
+    wander_m: 0.0
+  - f0: 0.88
+    f1: 0.93
+    du: 0.38
+    z: 0.45
+    wander_m: 0.0
+runs:
+- - none
+  - 0
+- - set1
+  - 3.0
+- - set2
+  - 2.0
+match:
+  du_m: 0.15
+  dz_m: 0.15
+  min_cover: 0.5
+tag: _e37

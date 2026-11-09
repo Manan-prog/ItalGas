@@ -1,0 +1,33 @@
+# E43 ground-frame V1: same fakes as E42, both frames.
+out_prefix: frame_injection
+frames: [instrument, ground]
+# E42 sideways-motion ('dither') test of along-street tracks (rules: DECISIONS 2026-11-04). Units m, ns.
+detector_config: configs/dev_swath_v2_2.yaml
+raw_root: /Users/manansarupria/ItalGas/Savona
+along_tag: _c                     # E39 tracks: cache/city/along_c_<i>.json
+drives: [73, 28, 30, 49, 106, 108, 36, 37, 39, 40, 45, 46]
+along_travel_bias_m: 1.19         # ASSUMED (E25)
+pp_fail_m: 5.0
+L_ref_m: 60.0                     # ASSUMED smoothness scale of a pipe relative to the van's lane changes
+L_ref_sens_m: [40.0, 100.0]
+fix_q: 4                          # GGA fix quality used (4 = RTK fixed)
+min_points: 5                     # track points (every 2 m) with RTK fix
+min_sd_d_m: 0.05                  # residual sideways motion needed to test a track
+b_thr: -0.5
+cluster_offset_m: [0.45, 0.65]    # offset from the strip centre (E39 definition), leftmost 200 MHz antenna
+shift_null: {n: 1000, shift_m: [50.0, 500.0], seed: 4201}
+mixture_bootstrap: 1000
+# validity controls: fake straight pipes in RAW 200 MHz traces, ground-fixed (G) or van-fixed (V), same places
+chunk_m: 600.0
+pad_m: 30.0
+keep_q: 0.2
+min_scans: 2000
+along_preprocess: {background: signature, lateral_background: true}   # option C, as the city scan
+along_longitudinal: {}
+windows:                          # drive index, s window (m along the drive's own track)
+  d108: [108, 100.0, 1100.0]
+  d49: [49, 1500.0, 2500.0]
+  d40: [40, 2700.0, 3640.0]
+  d45: [45, 500.0, 1500.0]       # added by the control-size rule (7 recovered G fakes < 8)
+fakes: {length_m: 40.0, gap_m: 20.0, min_range_m: 0.2, avoid_m: 5.0, max_n: 8, offsets_m: [-0.2, 0.0, 0.2], depths_m: [0.6, 0.9], amp: 5.0}
+match: {du_m: 0.15, min_overlap: 0.5}

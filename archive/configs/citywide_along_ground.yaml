@@ -1,0 +1,16 @@
+# E43: along-street branch in the GROUND frame (evidence re-registered by the van's sideways position). Writes cache/city/along_g_<i>.json.
+detector_config: configs/dev_swath_v2_2.yaml
+raw_root: /Users/manansarupria/ItalGas/Savona
+branches: [along]
+along_tag: _g
+frame: ground
+L_ref_m: 60.0                     # reference line, as E42
+along_preprocess: {background: signature, lateral_background: true}
+along_longitudinal: {}
+chunk_m: 600.0
+pad_m: 30.0
+min_scans: 2000
+keep_q: 0.2
+along_travel_bias_m: 1.19  # m, ASSUMED (E25)
+pp_fail_m: 5.0
+sigma_floor_m: 0.3

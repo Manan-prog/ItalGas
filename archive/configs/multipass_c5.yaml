@@ -1,0 +1,12 @@
+# Cluster C5: 17 Oct session 10-44-26, Swath017/018 opposite directions about 2 m apart (third patch test)
+tag: c5_
+detector_config: configs/dev_swath_v2_2.yaml
+raw_root: /Users/manansarupria/ItalGas/Savona
+session: savona 1410 matt_2025.10.17_09.03.29
+survey: Survey_2025-10-17_10-44-26
+reference: Swath017
+passes: [Swath017, Swath018]
+window_s_m: [20.0, 1100.0]
+u_max_m: 8.0
+tie: {max_ds_m: 3.0, max_dphi_deg: 10.0, max_dz_m: 0.15, q_max: 0.05}
+mosaic: {du_m: 0.08, u_range_m: [-2.5, 4.0], depth_slices_m: [[0.3, 0.5], [0.5, 0.7], [0.7, 0.9], [0.9, 1.1], [1.1, 1.4]]}
