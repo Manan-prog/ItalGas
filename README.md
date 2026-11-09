@@ -19,7 +19,7 @@ a radar-only estimate checked only against independent passes of the same vehicl
 
 ![Survey coverage](figures/investor_coverage_savona.png)
 
-Figures kept in `figures/`: survey coverage and positioning quality (`investor_coverage_savona.png`), the street-level result
+Figures in `figures/`: survey coverage and positioning quality (`investor_coverage_savona.png`), the street-level result
 (`team_street_pipes.png`), the held-out rule comparison (`rule_compare.png`), the near-surface artefact that fixed the depth
 floor (`near_surface_floor.png`), an evidence raster of one drive (`savona_prob_raster_49_1800.png`), raster versus lines
 (`savona_green_vs_lines_nizza.png`), the lane-agreement test (`savona_mosaic_*_nizza.png`), the crossing map of Via Nizza
@@ -33,32 +33,49 @@ behind every detection one click away.
 ## Repository layout
 
 ```
-pipeline/            the working chain (Python 3.11, NumPy/SciPy), one module per concept
-  paths.py             data locations ($ITALGAS_DATA), the only place a folder is defined
-  ids_reader.py        IDS Stream UP file formats (.data, .index, .path, .nmea), reverse engineered
-  geometry.py          vehicle frame <-> Web Mercator <-> lon/lat
-  build_cube.py, build_v2.py, processing.py     per-swath geometry, preprocessing, gridding
-  longitudinal.py, prob_raster.py, run_prob_rasters.py, raster_lines.py, rule_compare.py   along-street chain
-  crossings.py, run_crossings_v2.py, finalize_v2.py, citywide_scan.py, citywide_merge.py   crossing chain
-  survey_pairs.py, mosaic_fast.py, mosaic_test.py   repeat-lane registration and agreement test (E47)
-  evidence_images.py   radargram images for the web page popups
-  configs/             YAML configs (every threshold lives here, with its justification)
-  tests/               unit tests with known answers (pytest)
-figures/             result figures and their scripts; figures/web/ builds and hosts the web map
-docs/                method report (PDF + builder), literature review, ground-truth sources
-data_public/         Comune di Savona open data (CC BY 4.0), used as an independent check
-archive/             experiment code that did not enter the working chain (see archive/README.md)
-DECISIONS.md         dated design decisions with reasons (coordinate frame, velocity, thresholds, splits)
-EXPERIMENTS.md       log of every experiment: date, config, data subset, metric, conclusion
-REFERENCES.md        literature used, with what was taken from each source
-CLAUDE.md            project rules (scientific rigour, code standards, terminology)
+pyproject.toml           package metadata; `pip install -e .` installs the package and the `italgas-gpr` command
+src/italgas_gpr/         the code, one subpackage per concept
+  io/          ids_reader.py (IDS Stream UP .data/.index/.path/.nmea, reverse engineered), paths.py (every location)
+  geometry/    frames.py (vehicle frame <-> map), cube.py (track frame), swath.py (per-swath channel geometry),
+               tracks.py (drive tracks), dither.py (sideways motion), trajectory_qc.py (positioning quality)
+  processing/  filters.py (dewow, gain, migration, envelope), preprocess.py (per-array preprocessing, gridding, configs)
+  along/       focus.py (stack and focus across the street), evidence.py (evidence raster P of one piece),
+               rasters.py (all pieces, parallel), lines.py (raster -> lines, confidence), rules.py (held-out rule
+               comparison E50), tracks.py and endpoints.py (older branches kept for the scanner)
+  crossing/    score.py (cross-column stacking), detect.py (candidates and false-discovery control), merge.py (two rows
+               -> one crossing), scan.py (every drive), survey_merge.py (checks C1..C4, repeat-drive labels)
+  lanes/       pairs.py (which drives repeat which street), register.py and agreement.py (lane registration and the
+               two-lane agreement test E47), multipass.py (multi-pass registration)
+  web/         build.py (the map), build_city.py (raster tiles, footprints), common.py, host.py (claude.ai variant),
+               evidence_images.py (radargram per detection), templates/
+  figures/     one module per result figure, basemap.py, map_layers.py, report/ (method schematics)
+  cli.py       `italgas-gpr <step>`: every step of the chain as one command
+configs/                 YAML configs; every threshold lives here with its justification
+tests/                   unit tests with known answers (pytest)
+figures/                 result PNGs and figures/web/savona_pipes_map.html
+docs/                    method report (PDF + builder), literature review, ground-truth sources
+data_public/             Comune di Savona open data (CC BY 4.0), used as an independent check
+archive/                 experiment code that did not enter the working chain, with the old -> new name map
+DECISIONS.md             dated design decisions with reasons (coordinate frame, velocity, thresholds, splits)
+EXPERIMENTS.md           log of every experiment: date, config, data subset, metric, conclusion
+REFERENCES.md            literature used, with what was taken from each source
+CLAUDE.md                project rules (scientific rigour, code standards, terminology)
 ```
+
+Configs by purpose: `detector_base.yaml` and `detector.yaml` (preprocessing, migration, crossing and along-street
+detector parameters), `along_raster.yaml` (evidence raster), `along_lines.yaml` (line rule and confidence),
+`crossing_scan.yaml` (survey-wide crossing scan and merge), `crossing_merge_subset.yaml` (three sample streets),
+`along_tracks.yaml` (optional along-street track branch of the scanner), `survey.yaml` (drive tracks),
+`lane_registration.yaml` (lane registration), `osm_query.txt` (basemap data for the hosted map). The logs
+(EXPERIMENTS.md, DECISIONS.md) use the names these files had before 9 November 2026; `archive/README.md` has the map and
+`config_path()` accepts the old names.
 
 ## Setup
 
 ```bash
 conda create -n italgas python=3.11 && conda activate italgas      # or any Python 3.11 environment
-pip install -r requirements.txt
+pip install -r requirements.txt && pip install -e .                 # pinned versions, then the package itself
+italgas-gpr --help                                                  # lists every step in running order
 ```
 
 All data lives outside the repository under one folder, `~/ItalGas` by default. Set `ITALGAS_DATA` to use another disk:
@@ -68,13 +85,13 @@ export ITALGAS_DATA=/Volumes/data/ItalGas      # optional; default ~/ItalGas
 mkdir -p "$ITALGAS_DATA/Savona" "$ITALGAS_DATA/cache"
 ```
 
-Configs refer to `${ITALGAS_DATA}/Savona` and `${ITALGAS_DATA}/cache`; `pipeline/paths.py` expands them.
+Configs refer to `${ITALGAS_DATA}/Savona` and `${ITALGAS_DATA}/cache`; `italgas_gpr.io.paths` expands them.
 
 ### Raw data from S3
 
 The survey is stored as one zip per DataLogger session in the bucket `smart-auger-italgas-ingest-286665918804`
-(AWS profile of your own; the credentials file is not part of the repository). Download and unzip so that each session
-folder sits directly under `Savona/`:
+(use your own AWS profile; no credentials are part of the repository). Download and unzip so that each session folder
+sits directly under `Savona/`:
 
 ```bash
 aws s3 sync s3://smart-auger-italgas-ingest-286665918804/ "$ITALGAS_DATA/zips/" --profile <your-profile>
@@ -87,7 +104,8 @@ Expected layout (the session folder name is the zip name without `.zip`):
 $ITALGAS_DATA/Savona/
   savona 13.10.2025 matt_2025.10.13_09.51.03/
     Survey_2025-10-13_10-01-51/
-      Swath001.path  Swath001.index  Swath001_Array01.data  Swath001_Array02.data  Swath001.nmea  Swath001_Ext.nmea ...
+      Swath001.path  Swath001_Array01.index  Swath001_Array01.data  Swath001_Array02.index  Swath001_Array02.data
+      Swath001.nmea  Swath001_Ext.nmea ...
   savona 14.10.2025 matt_2025.10.14_10.25.22/
   ...
 ```
@@ -96,73 +114,71 @@ Sizes: 84 GB unzipped raw data; the cache grows to about 45 GB for the whole sur
 cached file name is the position of the swath in the sorted list of `Savona/*/Survey_*/Swath*.path`, so do not add or
 remove session folders between steps.
 
-Check the installation (reader, geometry, detector metrics, 27 tests, a few seconds):
+Check the installation (reader, geometry, detector metrics; 27 tests, a few seconds):
 
 ```bash
-cd pipeline && python -m pytest -q tests
+pytest -q
 ```
 
 ## Running the pipeline
 
-All commands run from `pipeline/`. Every step skips drives it has already done, so a run can be stopped and resumed.
-`<n>` is the number of parallel worker processes; see the compute notes below for sensible values.
+Every step is `italgas-gpr <step> [args]`, equivalent to `python -m italgas_gpr.<module> [args]`; run from anywhere.
+Every step skips drives it has already done, so a run can be stopped and resumed. `<n>` is the number of parallel
+worker processes; see the compute notes below for sensible values.
 
 ### Step 0: drive tracks (needed by both detectors)
 
 ```bash
-python build_swath_tracks.py configs/citywide.yaml        # -> cache/swaths.npz: every drive's RTK track, one entry per swath
+italgas-gpr tracks configs/survey.yaml           # -> cache/swaths.npz: every drive's RTK track, one entry per swath
 ```
 
 ### A. Along-street pipes (evidence raster, lines, confidence)
 
 ```bash
-python survey_pairs.py                                    # which drives repeat which street in another lane -> cache/city/lane_components.json
-python run_prob_rasters.py <n> all                        # evidence raster per 600 m piece of every drive -> cache/prob_raster_<drive>_<s0>.npz
-python mosaic_fast.py <n>                                 # lane registration and two-lane agreement test (E47) -> cache/city/lane_<ref>.npz, lane_summary.json
-python raster_lines.py <n>                                # raster -> lines by the rule in configs/raster_lines.yaml -> cache/city/rline_<drive>.json, raster_lines.json
-python rule_compare.py <n>                                # optional: held-out comparison of 54 line rules (E50) -> cache/city/rule_compare.json
-python evidence_images.py <n> lines                       # radargram image per line for the web page -> cache/web_evidence/lines/
+italgas-gpr pairs                                # which drives repeat which street in another lane -> cache/city/lane_components.json
+italgas-gpr rasters <n> all                      # evidence raster per 600 m piece of every drive -> cache/prob_raster_<drive>_<s0>.npz
+italgas-gpr lanes <n>                            # lane registration and two-lane agreement test (E47) -> cache/city/lane_<ref>.npz, lane_summary.json
+italgas-gpr lines <n>                            # raster -> lines by configs/along_lines.yaml -> cache/city/rline_<drive>.json, raster_lines.json
+italgas-gpr rules <n>                            # optional: held-out comparison of 54 line rules (E50) -> cache/city/rule_compare.json
+italgas-gpr images <n> lines                     # radargram image per line for the web page -> cache/web_evidence/lines/
 ```
 
-What each step does is in the module docstring; the thresholds and their reasons are in `configs/raster_lines.yaml`
-(line rule) and `configs/prob_raster.yaml` (raster). The raster of one piece can be inspected alone:
-`python prob_raster.py configs/prob_raster.yaml <drive> <piece start m>`.
+One raster piece on its own, for inspection: `italgas-gpr raster configs/along_raster.yaml <drive> <piece start m>`.
 
 ### B. Crossing pipes
 
 ```bash
-python citywide_scan.py configs/citywide_scan.yaml --workers <n>    # both radar rows, every drive -> cache/city/scan_<drive>.json (+ _frame.npz)
-python citywide_merge.py configs/citywide_scan.yaml                 # checks C1..C4, repeat-drive labels -> cache/city/citywide_merged.json
-python evidence_images.py <n> crossings                              # radargram image per crossing -> cache/web_evidence/crossings/
+italgas-gpr scan configs/crossing_scan.yaml --workers <n>   # both radar rows, every drive -> cache/city/scan_<drive>.json (+ _frame.npz)
+italgas-gpr merge configs/crossing_scan.yaml                # checks C1..C4, repeat-drive labels -> cache/city/citywide_merged.json
+italgas-gpr images <n> crossings                            # radargram image per crossing -> cache/web_evidence/crossings/
 ```
 
-`citywide_scan.py` works through the drives longest first and writes one JSON per drive; drives with an error are retried
-on the next run. The optional along-street *track* branch of the same scanner (`configs/citywide_along.yaml`) only feeds
-check C3 of the merge and is not needed for the map.
+The scan works through the drives longest first and writes one JSON per drive; drives with an error are retried on the
+next run. The optional along-street *track* branch of the same scanner (`configs/along_tracks.yaml`) only feeds check
+C3 of the merge and is not needed for the map.
 
 ### C. The web map
 
 ```bash
-cd ../figures/web
-ln -s "$ITALGAS_DATA/cache/web_evidence" evidence         # once; the page links the radargram images from here
-python build_savona_pipes_web.py savona_pipes_map.html    # one HTML file with every layer and check
+ln -s "$ITALGAS_DATA/cache/web_evidence" figures/web/evidence     # once; the page links the radargram images from here
+italgas-gpr page figures/web/savona_pipes_map.html               # one HTML file with every layer and check
 ```
 
 Open the file in a browser (the basemap tiles and the Leaflet library load from the internet). To host it on claude.ai,
-where the page may only load images published with it, `host_savona_pipes.py` replaces the satellite basemap by
-OpenStreetMap vectors (query in `osm_query.txt`, ODbL) and packs the images into sprite sheets:
+where the page may only load images published with it, `italgas-gpr host` replaces the satellite basemap by
+OpenStreetMap vectors (query in `configs/osm_query.txt`, ODbL) and packs the images into sprite sheets:
 
 ```bash
-curl -s -A "your-project/1.0" -o osm.json --data-urlencode "data@osm_query.txt" https://overpass-api.de/api/interpreter
-python -I host_savona_pipes.py osm.json <output folder>   # -> index.html, base/base.json, evidence/*.webp, raster/*.png
+curl -s -A "your-project/1.0" -o osm.json --data-urlencode "data@configs/osm_query.txt" https://overpass-api.de/api/interpreter
+italgas-gpr host osm.json <output folder>        # -> index.html, base/base.json, evidence/*.webp, raster/*.png
 ```
 
 ### D. Figures
 
-Each script in `figures/` writes the PNG next to it and prints the numbers it used; run from `figures/`:
-`python investor_coverage_savona.py`, `python team_street_pipes.py`, `python plot_rule_compare.py`,
-`python plot_near_surface_floor.py`, `python plot_prob_raster.py <drive> <piece>` and so on (usage in each docstring).
-`docs/build_method_report.py` rebuilds the method PDF from the figures and the cached results.
+`italgas-gpr fig-coverage`, `fig-street`, `fig-rules`, `fig-floor`, `fig-raster <drive> <s0> <start m> <length m>`,
+`fig-raster-lines`, `fig-crossings out.png`, `fig-lane-agreement`, `fig-lane-raster ...` write their PNG into `figures/`
+and print the numbers they used (`italgas-gpr --help` shows the arguments). `python docs/build_method_report.py`
+rebuilds the method PDF from the figures and the cached results (needs `pip install reportlab`).
 
 ## Method in brief
 
@@ -203,10 +219,10 @@ Measured on a 2024 MacBook (8 cores, 16 GB) with the whole survey:
 Where more speed would come from, in order of gain (not implemented, numerics unchanged):
 the 8 shuffled migrations of a raster piece are independent and could run in a thread pool inside the piece process
 (NumPy releases the GIL), but on an 8-core machine the piece-level parallelism already uses the cores, so the real limit
-is memory per worker; the contrast score (`longitudinal.point_vs_line_contrast`) builds 84 shifted copies of the window
-array with `np.roll` and could use strided views; the crossing scan migrates 29 channels at 4 velocities in a Python
-loop over channels and would gain most from a machine with more memory and workers. A 64 GB machine runs the whole
-survey in a few hours.
+is memory per worker; the contrast score (`along/focus.py`, `point_vs_line_contrast`) builds 84 shifted copies of the
+window array with `np.roll` and could use strided views; the crossing scan migrates 29 channels at 4 velocities in a
+Python loop over channels and would gain most from a machine with more memory and workers. A 64 GB machine runs the
+whole survey in a few hours.
 
 ## Caveats
 

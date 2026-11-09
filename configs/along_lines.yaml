@@ -1,0 +1,47 @@
+# along_lines.yaml (named raster_lines.yaml until 9 Nov 2026; EXPERIMENTS.md and DECISIONS.md use the old name)
+# Along-street pipe lines derived from the per-cell evidence rasters (prob_raster_<drive>_<piece>.npz), 4 Nov 2026.
+# One rule set for the whole survey; every number here is shown on the web page.
+detector_config: detector.yaml
+raw_root: ${ITALGAS_DATA}/Savona
+p_min: 0.5            # a cell counts as evidence when P >= p_min (P = share of such cells that shuffled-channel data does not produce)
+                      #   4 Nov 2026: 0.9, chosen on drives 37/46 before the near-surface floor (most of those lines were the floor artefact).
+                      #   5 Nov 2026 (E50, DECISIONS 2026-11-05): 0.5, with max_gap 8 and gate_u_m 0.20, the rule of 54 that a drive in
+                      #   another lane reproduces best on the held-out 15-17 Oct groups (20 % of covered length vs 2.6-3.9 % by chance);
+                      #   the 0.9 rule reproduced 0.6 %. User decision 5 Nov 2026.
+t_min_ns: 6.5         # samples earlier than this are NOT evaluated (two-way time; depth < 0.33 m at 0.10 m/ns). Amendment of 4 Nov 2026,
+                      #   made after the survey-wide run (post hoc, DECISIONS 2026-11-04 near-surface floor): between 3.9 and 6.3 ns the
+                      #   rate of cells with P >= 0.9 is 3 to 200 times the rate below 7 ns and recurs at fixed array columns
+                      #   (u 0.10-0.16 m and 0.80-0.86 m) in 24-30 of 120 drives, which no pipe layout can produce.
+                      #   One value for the line rule, the repeat-drive test (mosaic_test.pass_cells) and the page raster (p_tiles).
+u_min_m: -0.32        # lateral columns outside [u_min_m, u_max_m] are NOT evaluated (raster, lines, repeat-drive test). Exclusion of
+u_max_m: 0.68         #   5 Nov 2026 (DECISIONS): the outer five columns on each side (u <= -0.34 m, u >= 0.70 m) carry 75-92 cells
+                      #   with P >= 0.5 per 10 000 against 21-31 inside, in 93-101 of 120 drives at all depths; a chance curve fitted
+                      #   per column made it worse (234-353 vs 12-150), so it is structure the shuffled-channel null does not contain,
+                      #   fixed to the array (one-sided continuation test of the point-vs-line score at the outer 8 columns, and the
+                      #   outer antennas' surroundings). Evaluated swath: 0.96 m of the 1.36 m raster.
+chance:               # reference for lines by chance: the drive's windows are shuffled in blocks (cells kept, continuity broken)
+  block_windows: 16   # 16 windows = 8 m: longer than the 2 m stack and than the 4 m gap the rule bridges, shorter than the 10 m
+                      #   minimum line (5 Nov: 8 -> 16; with 8 the gap allowance bridged every block boundary and a straight feature
+                      #   survived the shuffle; with 24 every block of a straight feature was a >= 10 m line by itself, 236 vs 165 real
+                      #   on drive 83). A straight feature still survives in part: this reference is weak for straight pipes and the
+                      #   held-out second-lane test (E50) is the stronger statement.
+  n_draws: 20
+  seed: 4801
+sep_u_m: 0.12         # a cell must be the local maximum of P within +-sep_u_m across and +-sep_ns in time
+sep_ns: 2.0
+gate_u_m: 0.20        # window to window (0.5 m): the cell may move at most gate_u_m across and gate_ns in two-way time (E50: 0.12 -> 0.20)
+gate_ns: 2.0          #   (2.0 ns = 0.10 m depth at 0.10 m/ns)
+max_gap: 8            # empty windows that may be bridged (E50: 1 -> 8 = 4 m, the length of a manhole or a patched trench)
+min_len_m: 10.0       # a run shorter than this is not drawn
+merge_tol_cells: 2    # plan-view merge (E50 caveat): runs that lie on top of each other in plan, within +-merge_tol_cells
+merge_min_share: 0.5  #   (0.08 m) on at least merge_min_share of the shorter run's windows, are ONE line (multiples / ringing of
+                      #   one reflector stack in depth: median 3, up to 9 runs per plan cell at P >= 0.5). Drawn at the shallowest
+                      #   depth per window; the member depths are listed. Applied to the chance reference too.
+velocity_m_ns: 0.10   # DERIVED (E03), 0.10 +- 0.02, for depth only
+along_travel_bias_m: 1.19   # m, ASSUMED (E25): raster s -> map position
+pp_fail_m: 5.0        # positioning quality profiles (as crossing_scan.yaml)
+# repeat-drive agreement (E47 registered grids, cache/city/lane_<ref>.npz): same tolerance and lane rule as E47
+tol_cells: 2          # +-2 cells of 0.04 m = +-0.08 m across
+min_sep_m: 0.5        # strip centres at least this far apart = independent lane
+repeat_min_share: 0.5 # a partner drive 'repeats' a line when it shows P >= p_min on at least this share of the rows it covers
+min_covered_rows: 20  # ... and covers at least this many 0.5 m rows (10 m) of the line

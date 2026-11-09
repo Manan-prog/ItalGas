@@ -56,10 +56,10 @@ code that was run in the reply, never from memory; if a number is from memory, s
 - Vehicle frame: x forward, y positive to the LEFT of travel (verified against the
   IDS KML channel lines). GPS antenna at (0.695, -0.175, 1.968) m in that frame.
 - Survey: Savona, 13 to 17 Oct 2025, 10 sessions, 155 swaths, about 160 km of track.
-- Raw data: `$ITALGAS_DATA/Savona/` (default `~/ItalGas/Savona/`; local, 90 GB, never synced; `pipeline/paths.py`). Zips remain in S3
+- Raw data: `$ITALGAS_DATA/Savona/` (default `~/ItalGas/Savona/`; local, 90 GB, never synced; `src/italgas_gpr/io/paths.py`). Zips remain in S3
   bucket `smart-auger-italgas-ingest-286665918804` and in this Drive folder as
   online-only placeholders. AWS profile `italgas-manan-cli`.
-- File formats (reverse engineered; reader of record `pipeline/ids_reader.py`, exploration scripts in `archive/figures/`):
+- File formats (reverse engineered; reader of record `src/italgas_gpr/io/ids_reader.py`, exploration scripts in `archive/figures/`):
   `.data` = 36-byte header then int16 little-endian scans of [channels x 512];
   `.index` = header of 60 + 4 x n_channels bytes (100 for the 600 MHz array, 136 for the 200 MHz array) then 20-byte records (scan, time us, flag, odometer m);
   `.path` = 112-byte header then 36-byte records (x, y, z EPSG:3857, seq, time ms,
@@ -90,7 +90,8 @@ code that was run in the reply, never from memory; if a number is from memory, s
 - Tests: the format reader, the geometry transform and every metric have unit tests
   with known answers (for geometry, the IDS KML lines are the reference).
 - Notebooks are for looking, not for logic. Anything reused moves to a module.
-- Code lives in `pipeline/` in this folder (synced for backup). Virtual environments,
+- Code is the installable package `src/italgas_gpr/` (subpackages io, geometry, processing, along, crossing, lanes, web,
+  figures; `pip install -e .`; one CLI `italgas-gpr`), configs in `configs/`, tests in `tests/`. Virtual environments,
   caches, raw data and model checkpoints live locally and are git-ignored.
 - Run scripts with `python -I` when they read untrusted downloaded files.
 
@@ -103,7 +104,7 @@ code that was run in the reply, never from memory; if a number is from memory, s
   overviews, zoom 21 for detail panels), a scale bar, and corner coordinates.
 - Every figure answers one question stated in its title. Panels are lettered and
   the caption line under the title says what each panel shows.
-- Figures are produced by a script saved next to the PNG in `figures/`, at 150 dpi
+- Figures are produced by a module of `src/italgas_gpr/figures/` that writes the PNG into `figures/`, at 150 dpi
   or more, and are opened and inspected before being delivered.
 - Innovation is welcome (small multiples along the street, uncertainty ribbons on
   the pipe trace, radargram-on-map perspective views) but never at the cost of

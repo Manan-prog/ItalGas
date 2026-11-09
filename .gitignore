@@ -25,3 +25,8 @@ venv/
 
 # archive figures: scripts only, the PNGs are experiment output
 archive/figures/*.png
+
+# packaging
+*.egg-info/
+build/
+dist/

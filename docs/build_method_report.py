@@ -13,8 +13,8 @@ from reportlab.lib.units import mm
 from reportlab.platypus import Image, KeepTogether, Paragraph, SimpleDocTemplate, Spacer
 from PIL import Image as PILImage
 
-ROOT = Path(__file__).resolve().parents[1]; FIG = ROOT / "figures"; sys.path.insert(0, str(ROOT / "pipeline"))
-from paths import CACHE, CITY  # noqa: E402
+ROOT = Path(__file__).resolve().parents[1]; FIG = ROOT / "figures"
+from italgas_gpr.io.paths import CACHE, CITY  # noqa: E402
 OUT = Path(__file__).with_name("ItalGas_Savona_pipe_detection_method.pdf")
 # numbers from files
 RL = json.load(open(CITY / "raster_lines.json")); sm = RL["summary"]; cfg = RL["config"]
@@ -95,6 +95,6 @@ story += [KeepTogether([Paragraph("8. What to keep in mind", H1)] + bullets(["Ev
                   "Along-street lines are the weak point. A line seen by one drive can be a reflection fixed to the vehicle or the trench the pipe lies in; only a repeat from another lane rules that out, and few streets have one.",
                   "The top 0.33 m and the outer 0.2 m of each side of the strip are not evaluated, because the instrument itself produces strong, fixed signals there.",
                   f"The crossing detector has run on {len(scans)} of {len(frames)} drives; the rest is machine time, not method work."]))]
-story += [Spacer(1, 8), Paragraph("Code: pipeline/ in the project folder; every figure in this report has a script next to it under figures/. Experiments are logged in EXPERIMENTS.md, decisions in DECISIONS.md.", CAP)]
+story += [Spacer(1, 8), Paragraph("Code: the package src/italgas_gpr/ (pip install -e .; one command italgas-gpr); every figure in this report has a module under src/italgas_gpr/figures/ that writes it into figures/. Experiments are logged in EXPERIMENTS.md, decisions in DECISIONS.md.", CAP)]
 doc = SimpleDocTemplate(str(OUT), pagesize=A4, leftMargin=20 * mm, rightMargin=20 * mm, topMargin=18 * mm, bottomMargin=18 * mm, title="Finding gas pipes with a radar van", author="SmartAuger")
 doc.build(story); print(OUT)

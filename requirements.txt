@@ -1,4 +1,4 @@
-# Versions are the ones the results of EXPERIMENTS.md were produced with (Python 3.11.8, 9 Nov 2026).
+# Versions the results of EXPERIMENTS.md were produced with (Python 3.11.8, 9 Nov 2026). Install the package itself with: pip install -e .
 numpy==1.26.4
 scipy==1.11.4
 PyYAML==6.0.1
@@ -6,6 +6,5 @@ matplotlib==3.8.0
 contextily==1.6.2      # basemap tiles for the figures
 Pillow==10.2.0
 pyproj==3.6.1
-scikit-image==0.22.0   # pipeline/detect.py (Frangi), run_detection.py (Hough): early detector kept as a dependency of su_to_map
 reportlab==5.1.0       # docs/build_method_report.py only
 pytest==7.4.0

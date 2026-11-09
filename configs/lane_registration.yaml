@@ -1,0 +1,19 @@
+# lane_registration.yaml (named multipass_aurelia.yaml until 9 Nov 2026; EXPERIMENTS.md and DECISIONS.md use the old name)
+# Multi-pass registration and mosaic (3 Nov 2026). Street near 44.2849 N 8.4465 E, 13 Oct session 10-01-51.
+detector_config: detector.yaml
+raw_root: ${ITALGAS_DATA}/Savona
+session: savona 13.10.2025 matt_2025.10.13_09.51.03
+survey: Survey_2025-10-13_10-01-51
+reference: Swath041
+passes: [Swath041, Swath038, Swath047, Swath046, Swath040, Swath037]
+window_s_m: [2700.0, 3640.0]     # in the reference frame (s along the reference real-time track)
+u_max_m: 8.0
+tie:
+  max_ds_m: 3.0                  # candidate match window along s
+  max_dphi_deg: 10.0
+  max_dz_m: 0.15
+  q_max: 0.05
+mosaic:
+  du_m: 0.08
+  u_range_m: [-3.5, 6.5]
+  depth_slices_m: [[0.3, 0.5], [0.5, 0.7], [0.7, 0.9], [0.9, 1.1], [1.1, 1.4]]

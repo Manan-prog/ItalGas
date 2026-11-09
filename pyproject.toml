@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "italgas-gpr"
+version = "0.1.0"
+description = "Buried-pipe localisation from IDS Stream UP array GPR (Savona survey): along-street evidence rasters and lines, crossing-pipe detection, web map"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=1.26",
+    "scipy>=1.11",
+    "PyYAML>=6.0",
+    "matplotlib>=3.8",
+    "contextily>=1.6",
+    "Pillow>=10.0",
+    "pyproj>=3.6",
+]
+
+[project.optional-dependencies]
+report = ["reportlab>=4.0"]       # docs/build_method_report.py
+dev = ["pytest>=7.4"]
+
+[project.scripts]
+italgas-gpr = "italgas_gpr.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"italgas_gpr.web" = ["templates/*.html"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
